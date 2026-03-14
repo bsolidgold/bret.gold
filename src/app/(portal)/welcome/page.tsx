@@ -93,6 +93,24 @@ function WelcomeContent() {
             </a>
           </div>
         </motion.div>
+
+        <motion.div
+          className="flex flex-col items-center gap-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 4.5, duration: 1.5 }}
+        >
+          <p className="text-[10px] tracking-[0.3em] text-foreground/20">
+            EXPLORE THE BUILDING
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 text-xs">
+            <a href="/about" className="text-foreground/30 transition-colors hover:text-gold/60">/about</a>
+            <a href="/work" className="text-foreground/30 transition-colors hover:text-gold/60">/work</a>
+            <a href="/writing" className="text-foreground/30 transition-colors hover:text-gold/60">/writing</a>
+            <a href="/feed" className="text-foreground/30 transition-colors hover:text-gold/60">/feed</a>
+            <a href="/building" className="text-foreground/30 transition-colors hover:text-gold/60">/building</a>
+          </div>
+        </motion.div>
       </motion.div>
 
       <motion.p

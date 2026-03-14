@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
-import { getResident } from "@/lib/resident";
+import { useRequireResident } from "@/hooks/use-require-resident";
 
 type FloorData = {
   number: string;
@@ -50,31 +50,32 @@ function tierColor(tier: FloorData["tier"]) {
 }
 
 export default function BuildingPage() {
+  const { resident, loading: gateLoading } = useRequireResident();
   const [activeFloor, setActiveFloor] = useState<string | null>(null);
   const [elevatorPos, setElevatorPos] = useState(14); // Start at lobby (index 13)
   const [residentFloors, setResidentFloors] = useState<Set<string>>(new Set());
   const [showHidden, setShowHidden] = useState(false);
 
   useEffect(() => {
-    const resident = getResident();
     if (resident) {
       const roles = new Set([
         ...resident.primaryFloorRoles,
         ...resident.gatewayFloorRoles,
       ]);
       setResidentFloors(roles);
-      // Check if they have Floor 13 access
       if (roles.has("floor-13-rooftop")) {
         setShowHidden(true);
       }
     }
-  }, []);
+  }, [resident]);
 
   const visibleFloors = showHidden
     ? BUILDING
     : BUILDING.filter((f) => f.tier !== "hidden");
 
   const activeData = visibleFloors.find((f) => f.number === activeFloor);
+
+  if (gateLoading) return <div className="min-h-screen bg-void" />;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-4 py-16">

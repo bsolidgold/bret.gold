@@ -3,8 +3,12 @@
 import { motion } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
+import { useRequireResident } from "@/hooks/use-require-resident";
 
 export default function AboutPage() {
+  const { loading } = useRequireResident();
+  if (loading) return <div className="min-h-screen bg-void" />;
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-6 py-16">
       {/* Background static */}

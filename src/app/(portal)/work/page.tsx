@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
+import { useRequireResident } from "@/hooks/use-require-resident";
 
 type Project = {
   name: string;
@@ -47,7 +48,10 @@ function statusBadge(status: Project["status"]) {
 }
 
 export default function WorkPage() {
+  const { loading } = useRequireResident();
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  if (loading) return <div className="min-h-screen bg-void" />;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-6 py-16">

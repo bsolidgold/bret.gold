@@ -4,10 +4,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
+import { useRequireResident } from "@/hooks/use-require-resident";
 
 const GUILD_ID = process.env.NEXT_PUBLIC_DISCORD_GUILD_ID;
 
 export default function ContactPage() {
+  const { loading: gateLoading } = useRequireResident();
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -34,6 +36,8 @@ export default function ContactPage() {
       setStatus("error");
     }
   }
+
+  if (gateLoading) return <div className="min-h-screen bg-void" />;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-6 py-16">

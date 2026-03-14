@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
+import { useRequireResident } from "@/hooks/use-require-resident";
 
 type FloorActivity = {
   floor: string;
@@ -12,6 +13,7 @@ type FloorActivity = {
 };
 
 export default function FeedPage() {
+  const { loading: gateLoading } = useRequireResident();
   const [floors, setFloors] = useState<FloorActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +37,8 @@ export default function FeedPage() {
     }, 120000);
     return () => clearInterval(interval);
   }, []);
+
+  if (gateLoading) return <div className="min-h-screen bg-void" />;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-6 py-16">
