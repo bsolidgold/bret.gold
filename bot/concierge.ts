@@ -53,6 +53,7 @@ const AUTO_REACTIONS: Record<string, string> = {
   "check-in": "🫂",
   "published": "📖",
   "dev-log": "🚀",
+  "milestones": "🕯️",
 };
 
 const client = new Client({

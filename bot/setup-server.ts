@@ -40,6 +40,7 @@ const FLOOR_CONFIG = [
       "the-clearing", "the-campfire", "check-in", "wins",
       "cpt", "emdr", "parts-work", "dbt-skills",
       "the-stable", "the-stage", "mind-body",
+      "the-well", "cravings", "milestones", "triggers",
       "the-forum", "resources", "the-back-room",
     ],
   },
