@@ -28,21 +28,30 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
 const GUILD_ID = process.env.DISCORD_GUILD_ID!;
 
 // Floor metadata for display
-const FLOORS: Record<string, { name: string; number: string; role: string }> = {
-  "floor-1-living-room": { name: "THE LIVING ROOM", number: "1", role: "floor-1-living-room" },
-  "floor-2-hollow": { name: "THE HOLLOW", number: "2", role: "floor-2-hollow" },
-  "floor-3-dojo": { name: "THE DOJO", number: "3", role: "floor-3-dojo" },
-  "floor-4-office": { name: "THE OFFICE", number: "4", role: "floor-4-office" },
-  "floor-5-terminal": { name: "THE TERMINAL", number: "5", role: "floor-5-terminal" },
-  "floor-6-study": { name: "THE STUDY", number: "6", role: "floor-6-study" },
-  "floor-7-old-wing": { name: "THE OLD WING", number: "7", role: "floor-7-old-wing" },
-  "floor-8-new-wing": { name: "THE NEW WING", number: "8", role: "floor-8-new-wing" },
-  "floor-9-front-desk": { name: "THE FRONT DESK", number: "9", role: "floor-9-front-desk" },
-  "floor-10-gym": { name: "THE GYM", number: "10", role: "floor-10-gym" },
-  "floor-11-gallery": { name: "THE GALLERY", number: "11", role: "floor-11-gallery" },
-  "floor-12-chapel": { name: "THE CHAPEL", number: "12", role: "floor-12-chapel" },
-  "floor-b-basement": { name: "THE BASEMENT", number: "B", role: "floor-b-basement" },
+type FloorTier = "open" | "gated" | "locked";
+const FLOORS: Record<string, { name: string; number: string; role: string; tier: FloorTier; desc: string }> = {
+  "floor-1-living-room": { name: "THE LIVING ROOM", number: "1", role: "floor-1-living-room", tier: "gated", desc: "The personal space" },
+  "floor-2-hollow": { name: "THE HOLLOW", number: "2", role: "floor-2-hollow", tier: "gated", desc: "Recovery and healing" },
+  "floor-3-dojo": { name: "THE DOJO", number: "3", role: "floor-3-dojo", tier: "open", desc: "Jiu-jitsu" },
+  "floor-4-office": { name: "THE OFFICE", number: "4", role: "floor-4-office", tier: "gated", desc: "Work and projects" },
+  "floor-5-terminal": { name: "THE TERMINAL", number: "5", role: "floor-5-terminal", tier: "open", desc: "Code and building" },
+  "floor-6-study": { name: "THE STUDY", number: "6", role: "floor-6-study", tier: "gated", desc: "Writing and craft" },
+  "floor-7-old-wing": { name: "THE OLD WING", number: "7", role: "floor-7-old-wing", tier: "locked", desc: "Old friends only" },
+  "floor-8-new-wing": { name: "THE NEW WING", number: "8", role: "floor-8-new-wing", tier: "open", desc: "New arrivals" },
+  "floor-9-front-desk": { name: "THE FRONT DESK", number: "9", role: "floor-9-front-desk", tier: "open", desc: "Business and inquiries" },
+  "floor-10-gym": { name: "THE GYM", number: "10", role: "floor-10-gym", tier: "gated", desc: "Fitness and nutrition" },
+  "floor-11-gallery": { name: "THE GALLERY", number: "11", role: "floor-11-gallery", tier: "open", desc: "Music, art, photography" },
+  "floor-12-chapel": { name: "THE CHAPEL", number: "12", role: "floor-12-chapel", tier: "gated", desc: "Philosophy and practice" },
+  "floor-b-basement": { name: "THE BASEMENT", number: "B", role: "floor-b-basement", tier: "locked", desc: "Server infrastructure" },
 };
+
+// Ordered floor list for display
+const FLOOR_ORDER = [
+  "floor-1-living-room", "floor-2-hollow", "floor-3-dojo", "floor-4-office",
+  "floor-5-terminal", "floor-6-study", "floor-7-old-wing", "floor-8-new-wing",
+  "floor-9-front-desk", "floor-10-gym", "floor-11-gallery", "floor-12-chapel",
+  "floor-b-basement",
+];
 
 // Auto-react rules: channel name -> emoji
 const AUTO_REACTIONS: Record<string, string> = {
@@ -142,6 +151,21 @@ const commands = [
         .addChoices(...floorChoices)
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName("explore")
+    .setDescription("See the full building directory with your access status")
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName("request")
+    .setDescription("Request access to a floor")
+    .addStringOption((opt) =>
+      opt
+        .setName("floor")
+        .setDescription("The floor you want access to")
+        .setRequired(true)
+        .addChoices(...floorChoices.filter(c => FLOORS[c.value]?.tier === "gated"))
+    )
+    .toJSON(),
 ];
 
 async function registerCommands() {
@@ -237,6 +261,124 @@ async function handleBuilding(interaction: ChatInputCommandInteraction) {
 
   await interaction.reply({
     content: `\`\`\`\nTHE BUILDING\n${"═".repeat(38)}\n${directory}\n${"═".repeat(38)}\n13 floors. Each one a different part of a life.\n\`\`\``,
+    ephemeral: true,
+  });
+}
+
+async function handleExplore(interaction: ChatInputCommandInteraction) {
+  const member = interaction.member;
+  if (!member || !("roles" in member)) return;
+  const memberRoles = member.roles;
+  if (!("cache" in memberRoles)) return;
+
+  const userFloors = new Set(
+    memberRoles.cache.filter((r) => r.name.startsWith("floor-")).map((r) => r.name)
+  );
+
+  const lines: string[] = [];
+  // Lobby is always open
+  lines.push(`  ✓  0 │ THE LOBBY        │ always open`);
+
+  for (const key of FLOOR_ORDER) {
+    const f = FLOORS[key];
+    const num = f.number.padStart(2);
+    const name = f.name.padEnd(16);
+    if (userFloors.has(key)) {
+      lines.push(`  ✓ ${num} │ ${name} │ access granted`);
+    } else if (f.tier === "open") {
+      lines.push(`  ✓ ${num} │ ${name} │ open to all`);
+    } else if (f.tier === "gated") {
+      lines.push(`  ○ ${num} │ ${name} │ /request to knock`);
+    } else {
+      lines.push(`  ⬚ ${num} │ ${name} │ locked`);
+    }
+  }
+
+  const embed = new EmbedBuilder()
+    .setColor(0xc9a84c)
+    .setTitle("THE BUILDING")
+    .setDescription(
+      `\`\`\`\n${lines.join("\n")}\n\`\`\`\n` +
+      `✓ = you're in  ·  ○ = request with \`/request\`  ·  ⬚ = locked`
+    )
+    .setFooter({ text: "13 floors. Each one a different part of a life." });
+
+  await interaction.reply({ embeds: [embed], ephemeral: true });
+}
+
+async function handleRequest(interaction: ChatInputCommandInteraction) {
+  const member = interaction.member;
+  if (!member || !("roles" in member)) return;
+  const memberRoles = member.roles;
+  if (!("cache" in memberRoles)) return;
+
+  const floorKey = interaction.options.getString("floor", true);
+  const info = FLOORS[floorKey];
+  if (!info) {
+    await interaction.reply({ content: "Unknown floor.", ephemeral: true });
+    return;
+  }
+
+  // Check if they already have access
+  if (memberRoles.cache.some((r) => r.name === floorKey)) {
+    await interaction.reply({
+      content: `\`\`\`\nYou already have access to Floor ${info.number} — ${info.name}.\nThe door is open.\n\`\`\``,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // Check if floor is requestable
+  if (info.tier !== "gated") {
+    await interaction.reply({
+      content: `\`\`\`\nFloor ${info.number} — ${info.name} cannot be requested.\n\`\`\``,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // Find architect
+  const guild = await client.guilds.fetch(GUILD_ID);
+  const members = await guild.members.fetch();
+  const architect = members.find((m) =>
+    m.roles.cache.some((r) => r.name === "architect")
+  );
+
+  if (!architect) {
+    await interaction.reply({
+      content: "```\nNo architect found. The building is unattended.\n```",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // Send approval request to architect
+  const archetype = memberRoles.cache.find((r) => r.name.startsWith("The "));
+
+  const embed = new EmbedBuilder()
+    .setColor(0xc9a84c)
+    .setTitle("Floor Access Request")
+    .setDescription(
+      `**${interaction.user.username}** (${archetype?.name ?? "unknown"}) is requesting access to **Floor ${info.number} — ${info.name}**.`
+    )
+    .setFooter({ text: `User ID: ${interaction.user.id}` })
+    .setTimestamp();
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`approve_${interaction.user.id}_${floorKey}`)
+      .setLabel("Approve")
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`deny_${interaction.user.id}_${floorKey}`)
+      .setLabel("Deny")
+      .setStyle(ButtonStyle.Danger)
+  );
+
+  await architect.send({ embeds: [embed], components: [row] });
+
+  await interaction.reply({
+    content: `\`\`\`\nREQUEST SENT\nFloor ${info.number} — ${info.name}\n\nThe architect has been notified. Wait for the door.\n\`\`\``,
     ephemeral: true,
   });
 }
@@ -468,6 +610,12 @@ client.on("interactionCreate", async (interaction) => {
       case "revoke":
         await handleRevoke(interaction);
         break;
+      case "explore":
+        await handleExplore(interaction);
+        break;
+      case "request":
+        await handleRequest(interaction);
+        break;
     }
   } else if (interaction.isButton()) {
     await handleButton(interaction);
@@ -495,18 +643,30 @@ client.on("guildMemberAdd", async (member) => {
     );
   }
 
-  // DM with nickname instructions
+  // DM with nickname instructions and slash command guide
   await member.send({
     embeds: [
       new EmbedBuilder()
         .setColor(0xc9a84c)
         .setTitle("Welcome to The Building")
         .setDescription(
-          "One thing — set your **server nickname** so people know who you are.\n\n" +
-          "**How to do it:**\n" +
-          "• **Desktop:** Click the server name at the top → *Edit Server Profile* → set your nickname\n" +
-          "• **Mobile:** Tap the server name → *Edit Server Profile* → set your nickname\n\n" +
-          "Use your real name, a name people know you by, or whatever you want to be called here."
+          "**First thing** — set your **server nickname** so people know who you are.\n\n" +
+          "• **Desktop:** Click the server name at the top → *Edit Server Profile*\n" +
+          "• **Mobile:** Tap the server name → *Edit Server Profile*\n\n" +
+          "Use your real name or whatever you want to be called here."
+        ),
+      new EmbedBuilder()
+        .setColor(0x2d2d2d)
+        .setTitle("How to get around")
+        .setDescription(
+          "The Building has 13 floors. The sorting gave you access to some. " +
+          "Others are open to explore. Some require a request.\n\n" +
+          "**Commands:**\n" +
+          "`/explore` — See every floor and your access status\n" +
+          "`/request` — Ask for access to a gated floor\n" +
+          "`/whoami` — Your identity in The Building\n" +
+          "`/floor` — See which floors you're on\n\n" +
+          "Type `/` in any channel to see all available commands."
         )
         .setFooter({ text: "The building remembers names." })
     ],
