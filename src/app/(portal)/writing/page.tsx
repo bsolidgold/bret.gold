@@ -5,48 +5,53 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
 
-type Project = {
-  name: string;
-  desc: string;
-  tags: string[];
-  link?: string;
-  status: "live" | "building" | "archived";
+type Piece = {
+  title: string;
+  type: "poem" | "prose" | "fragment";
+  content: string;
 };
 
-const PROJECTS: Project[] = [
+const PIECES: Piece[] = [
   {
-    name: "THE BUILDING",
-    desc: "this site. a discord server disguised as a 13-floor building. sorting quiz, bot concierge, anonymous posting, AI integration.",
-    tags: ["next.js", "discord.js", "typescript", "claude ai"],
-    status: "live",
+    title: "UNTITLED (FLOOR 2)",
+    type: "fragment",
+    content: `i didn't come here to get better.
+i came here because i ran out of places to hide.
+
+the building doesn't care why you showed up.
+it just asks if you're staying.`,
   },
   {
-    name: "THE CONCIERGE",
-    desc: "discord bot that runs the building. handles sorting, floor access, anonymous posting, scheduled prompts, and AI-powered responses.",
-    tags: ["discord.js", "anthropic sdk", "node-cron"],
-    status: "live",
+    title: "THE MAT",
+    type: "poem",
+    content: `the mat doesn't lie.
+your body remembers everything
+your mouth won't say.
+
+tap or break.
+that's the whole philosophy.`,
   },
   {
-    name: "OPENMAT",
-    desc: "jiu-jitsu open mat finder. search for open mats near you, add your own, connect with grapplers.",
-    tags: ["next.js", "typescript", "supabase"],
-    link: "https://openmat.app",
-    status: "building",
+    title: "3AM",
+    type: "fragment",
+    content: `everyone who's ever been awake at 3am
+knows something that the morning people don't.
+
+the building is different at night.
+the walls are thinner.
+you can hear the other floors.`,
   },
 ];
 
-function statusBadge(status: Project["status"]) {
-  switch (status) {
-    case "live":
-      return <span className="text-green-glow/60">live</span>;
-    case "building":
-      return <span className="text-gold/50">building</span>;
-    case "archived":
-      return <span className="text-foreground/20">archived</span>;
+function typeLabel(type: Piece["type"]) {
+  switch (type) {
+    case "poem": return "poem";
+    case "prose": return "prose";
+    case "fragment": return "fragment";
   }
 }
 
-export default function WorkPage() {
+export default function WritingPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
@@ -67,27 +72,36 @@ export default function WorkPage() {
       >
         <div className="flex flex-col items-center gap-2">
           <GlitchText
-            text="WORK"
+            text="WRITING"
             className="text-3xl font-bold tracking-[0.3em] text-gold sm:text-4xl"
             as="h1"
             glitchInterval={5000}
             glitchIntensity={0.15}
           />
           <CipherReveal
-            text="// THINGS I'VE BUILT"
+            text="// FLOOR 6 — THE STUDY"
             className="text-xs tracking-[0.3em] text-foreground/25"
             duration={800}
             delay={500}
           />
         </div>
 
-        {/* Projects */}
+        <motion.p
+          className="text-center text-sm text-foreground/30"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 1 }}
+        >
+          things i wrote. some finished. most not.
+        </motion.p>
+
+        {/* Pieces */}
         <div className="flex w-full flex-col gap-1">
-          {PROJECTS.map((project, i) => {
-            const isOpen = expanded === project.name;
+          {PIECES.map((piece, i) => {
+            const isOpen = expanded === piece.title;
             return (
               <motion.div
-                key={project.name}
+                key={piece.title}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
@@ -96,14 +110,16 @@ export default function WorkPage() {
                   className={`flex w-full items-center gap-4 border-b border-foreground/5 px-4 py-3 text-left transition-all duration-300
                     ${isOpen ? "bg-gold/5 border-gold/15" : "hover:bg-foreground/[0.02]"}
                   `}
-                  onClick={() => setExpanded(isOpen ? null : project.name)}
+                  onClick={() => setExpanded(isOpen ? null : piece.title)}
                 >
                   <span
                     className={`flex-1 text-xs tracking-[0.15em] transition-colors ${isOpen ? "text-gold/80" : "text-foreground/40"}`}
                   >
-                    {project.name}
+                    {piece.title}
                   </span>
-                  <span className="text-[10px]">{statusBadge(project.status)}</span>
+                  <span className="text-[10px] text-foreground/20">
+                    {typeLabel(piece.type)}
+                  </span>
                 </button>
                 <AnimatePresence>
                   {isOpen && (
@@ -114,30 +130,10 @@ export default function WorkPage() {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="py-4">
-                        <p className="mb-3 text-xs leading-relaxed text-foreground/35">
-                          {project.desc}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {project.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="border border-foreground/8 px-2 py-0.5 text-[10px] text-foreground/25"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                        {project.link && (
-                          <a
-                            href={project.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-3 inline-block text-[10px] text-gold/40 transition-colors hover:text-gold/70"
-                          >
-                            view project &rarr;
-                          </a>
-                        )}
+                      <div className="py-6">
+                        <pre className="whitespace-pre-wrap text-xs leading-relaxed text-foreground/40">
+                          {piece.content}
+                        </pre>
                       </div>
                     </motion.div>
                   )}
@@ -153,7 +149,7 @@ export default function WorkPage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          more coming. the building is always under construction.
+          more in the drafts folder. always more in the drafts folder.
         </motion.p>
 
         {/* Links */}
@@ -167,8 +163,8 @@ export default function WorkPage() {
             <a href="/about" className="text-foreground/30 transition-colors hover:text-gold/60">
               /about
             </a>
-            <a href="/contact" className="text-foreground/30 transition-colors hover:text-gold/60">
-              /contact
+            <a href="/work" className="text-foreground/30 transition-colors hover:text-gold/60">
+              /work
             </a>
             <a href="/building" className="text-foreground/30 transition-colors hover:text-gold/60">
               /building

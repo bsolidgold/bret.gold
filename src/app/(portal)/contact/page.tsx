@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
@@ -7,6 +8,33 @@ import { CipherReveal } from "@/components/effects/cipher-reveal";
 const GUILD_ID = process.env.NEXT_PUBLIC_DISCORD_GUILD_ID;
 
 export default function ContactPage() {
+  const [name, setName] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !message.trim()) return;
+
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), message: message.trim() }),
+      });
+      if (res.ok) {
+        setStatus("sent");
+        setName("");
+        setMessage("");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  }
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-6 py-16">
       <div
@@ -18,7 +46,7 @@ export default function ContactPage() {
       />
 
       <motion.div
-        className="relative z-10 flex max-w-md flex-col items-center gap-12"
+        className="relative z-10 flex w-full max-w-md flex-col items-center gap-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.5 }}
@@ -45,25 +73,21 @@ export default function ContactPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 1 }}
         >
-          <p className="text-center text-sm text-foreground/40">
-            the front desk is open.
-          </p>
-
-          {/* Contact methods */}
+          {/* Contact links */}
           <div className="flex flex-col gap-1">
             <a
-              href="mailto:bret@bret.gold"
+              href="mailto:bret@bretgold.com"
               className="flex items-center gap-4 border-b border-foreground/5 px-4 py-3 transition-all hover:bg-foreground/[0.02]"
             >
               <span className="w-16 text-[10px] tracking-wider text-foreground/20">
                 EMAIL
               </span>
               <span className="text-xs text-foreground/50 transition-colors hover:text-gold/60">
-                bret@bret.gold
+                bret@bretgold.com
               </span>
             </a>
             <a
-              href="https://github.com/bretgold"
+              href="https://github.com/bsolidgold"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-4 border-b border-foreground/5 px-4 py-3 transition-all hover:bg-foreground/[0.02]"
@@ -72,7 +96,7 @@ export default function ContactPage() {
                 GITHUB
               </span>
               <span className="text-xs text-foreground/50 transition-colors hover:text-gold/60">
-                @bretgold
+                @bsolidgold
               </span>
             </a>
             {GUILD_ID && (
@@ -91,16 +115,62 @@ export default function ContactPage() {
               </a>
             )}
           </div>
-        </motion.div>
 
-        <motion.p
-          className="text-center text-xs text-foreground/15"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-        >
-          leave a message. the building will pass it along.
-        </motion.p>
+          {/* Contact form */}
+          <motion.div
+            className="mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 1 }}
+          >
+            <p className="mb-4 text-center text-xs text-foreground/25">
+              or leave a message at the front desk.
+            </p>
+
+            {status === "sent" ? (
+              <motion.div
+                className="border border-gold/20 px-6 py-4 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <p className="text-xs text-gold/60">
+                  message delivered. the building will pass it along.
+                </p>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder="your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={100}
+                  className="border border-foreground/10 bg-transparent px-4 py-2 text-xs text-foreground/60 placeholder:text-foreground/15 focus:border-gold/30 focus:outline-none"
+                />
+                <textarea
+                  placeholder="your message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  className="resize-none border border-foreground/10 bg-transparent px-4 py-2 text-xs text-foreground/60 placeholder:text-foreground/15 focus:border-gold/30 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={status === "sending" || !name.trim() || !message.trim()}
+                  className="border border-gold/20 px-4 py-2 text-xs tracking-[0.15em] text-gold/50 transition-all hover:border-gold/40 hover:bg-gold/5 hover:text-gold/80 disabled:opacity-30 disabled:hover:border-gold/20 disabled:hover:bg-transparent"
+                >
+                  {status === "sending" ? "sending..." : "SEND"}
+                </button>
+                {status === "error" && (
+                  <p className="text-center text-[10px] text-red-ember/60">
+                    something went wrong. try again.
+                  </p>
+                )}
+              </form>
+            )}
+          </motion.div>
+        </motion.div>
 
         {/* Links */}
         <motion.div
