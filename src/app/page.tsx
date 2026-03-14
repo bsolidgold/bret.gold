@@ -13,6 +13,7 @@ export default function Home() {
   const [phase, setPhase] = useState<"loading" | "boot" | "title" | "ready" | "resident">("loading");
   const [hovered, setHovered] = useState(false);
   const [resident, setResidentState] = useState<ResidentData | null>(null);
+  const [pulse, setPulse] = useState<{ alive: boolean; members: number; online: number } | null>(null);
 
   // Check for returning resident on mount
   useEffect(() => {
@@ -23,6 +24,14 @@ export default function Home() {
     } else {
       setPhase("boot");
     }
+  }, []);
+
+  // Fetch building pulse
+  useEffect(() => {
+    fetch("/api/pulse")
+      .then((r) => r.json())
+      .then(setPulse)
+      .catch(() => {});
   }, []);
 
   return (
@@ -327,16 +336,25 @@ export default function Home() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom signal indicator */}
+      {/* Bottom activity pulse */}
       {phase !== "resident" && (
         <motion.div
-          className="fixed bottom-8 flex items-center gap-2 text-xs text-foreground/20"
+          className="fixed bottom-8 flex items-center gap-3 text-xs text-foreground/20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 3, duration: 2 }}
         >
           <div className="h-1.5 w-1.5 rounded-full bg-gold/40" style={{ animation: "glow-pulse 3s infinite" }} />
           <span>signal active</span>
+          {pulse?.alive && pulse.members > 0 && (
+            <>
+              <span className="text-foreground/10">|</span>
+              <span className="text-foreground/15">
+                {pulse.members} resident{pulse.members !== 1 ? "s" : ""}
+                {pulse.online > 0 && ` \u00B7 ${pulse.online} online`}
+              </span>
+            </>
+          )}
         </motion.div>
       )}
     </div>

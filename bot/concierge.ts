@@ -1,6 +1,7 @@
 /**
  * The Concierge — GOLD's bot.
- * Handles role assignment, approval flows, slash commands.
+ * Handles role assignment, approval flows, slash commands,
+ * anonymous posting, scheduled prompts, and AI responses.
  *
  * Run with: npx tsx bot/concierge.ts
  */
@@ -17,18 +18,28 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  ChannelType,
 } from "discord.js";
+import Anthropic from "@anthropic-ai/sdk";
+import * as cron from "node-cron";
 import * as dotenv from "dotenv";
 import { resolve } from "path";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 
 dotenv.config({ path: resolve(__dirname, "../.env.local") });
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN!;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
 const GUILD_ID = process.env.DISCORD_GUILD_ID!;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+// Anthropic client (optional — works without it, just no AI responses)
+const anthropic = ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: ANTHROPIC_API_KEY })
+  : null;
 
 // Floor metadata for display
-type FloorTier = "open" | "gated" | "locked";
+type FloorTier = "open" | "gated" | "locked" | "hidden";
 const FLOORS: Record<string, { name: string; number: string; role: string; tier: FloorTier; desc: string }> = {
   "floor-1-living-room": { name: "THE LIVING ROOM", number: "1", role: "floor-1-living-room", tier: "gated", desc: "The personal space" },
   "floor-2-hollow": { name: "THE HOLLOW", number: "2", role: "floor-2-hollow", tier: "gated", desc: "Recovery and healing" },
@@ -42,6 +53,7 @@ const FLOORS: Record<string, { name: string; number: string; role: string; tier:
   "floor-10-gym": { name: "THE GYM", number: "10", role: "floor-10-gym", tier: "gated", desc: "Fitness and nutrition" },
   "floor-11-gallery": { name: "THE GALLERY", number: "11", role: "floor-11-gallery", tier: "open", desc: "Music, art, photography" },
   "floor-12-chapel": { name: "THE CHAPEL", number: "12", role: "floor-12-chapel", tier: "gated", desc: "Philosophy and practice" },
+  "floor-13-rooftop": { name: "THE ROOFTOP", number: "13", role: "floor-13-rooftop", tier: "hidden", desc: "Above it all" },
   "floor-b-basement": { name: "THE BASEMENT", number: "B", role: "floor-b-basement", tier: "locked", desc: "Server infrastructure" },
 };
 
@@ -55,15 +67,147 @@ const FLOOR_ORDER = [
 
 // Auto-react rules: channel name -> emoji
 const AUTO_REACTIONS: Record<string, string> = {
-  "wins": "🏆",
-  "proof-of-life": "👁️",
-  "now-playing": "🎧",
-  "open-mat-signal": "🤙",
-  "check-in": "🫂",
-  "published": "📖",
-  "dev-log": "🚀",
-  "milestones": "🕯️",
+  "wins": "\u{1F3C6}",
+  "proof-of-life": "\u{1F441}\uFE0F",
+  "now-playing": "\u{1F3A7}",
+  "open-mat-signal": "\u{1F919}",
+  "check-in": "\u{1FAE2}",
+  "published": "\u{1F4D6}",
+  "dev-log": "\u{1F680}",
+  "milestones": "\u{1F56F}\uFE0F",
 };
+
+// Channels where /anon is allowed (Floor 2 — The Hollow text channels)
+const HOLLOW_CHANNELS = new Set([
+  "the-clearing", "check-in", "wins", "cpt", "emdr", "parts-work",
+  "dbt-skills", "the-stable", "the-stage", "mind-body", "the-well",
+  "cravings", "milestones", "resources", "the-back-room",
+]);
+
+// --- Archetype Evolution ---
+
+type EvolutionLevel = { threshold: number; title: string; message: string };
+
+const EVOLUTION_LEVELS: EvolutionLevel[] = [
+  { threshold: 50, title: "Emerging", message: "something is shifting. you're becoming more than you were when you arrived." },
+  { threshold: 200, title: "Established", message: "the building has noticed you. the walls know your name now." },
+  { threshold: 500, title: "Ascended", message: "you've earned your place here. the building bends to you." },
+  { threshold: 1000, title: "Mythic", message: "you are part of the building now. the building is part of you." },
+];
+
+type ActivityData = Record<string, { messages: number; level: number }>;
+
+const ACTIVITY_FILE = resolve(__dirname, "../.activity.json");
+
+function loadActivity(): ActivityData {
+  try {
+    if (existsSync(ACTIVITY_FILE)) {
+      return JSON.parse(readFileSync(ACTIVITY_FILE, "utf-8"));
+    }
+  } catch {}
+  return {};
+}
+
+function saveActivity(data: ActivityData) {
+  try {
+    writeFileSync(ACTIVITY_FILE, JSON.stringify(data, null, 2));
+  } catch {}
+}
+
+const activity = loadActivity();
+
+function getEvolutionTitle(userId: string): string | null {
+  const user = activity[userId];
+  if (!user || user.level === 0) return null;
+  return EVOLUTION_LEVELS[user.level - 1]?.title ?? null;
+}
+
+async function trackActivity(userId: string, guildId: string) {
+  if (!activity[userId]) {
+    activity[userId] = { messages: 0, level: 0 };
+  }
+
+  activity[userId].messages++;
+  const count = activity[userId].messages;
+  const currentLevel = activity[userId].level;
+
+  // Check for level up
+  for (let i = EVOLUTION_LEVELS.length - 1; i >= 0; i--) {
+    if (count >= EVOLUTION_LEVELS[i].threshold && currentLevel <= i) {
+      activity[userId].level = i + 1;
+      saveActivity(activity);
+
+      // Send level-up DM
+      try {
+        const guild = await client.guilds.fetch(guildId);
+        const member = await guild.members.fetch(userId);
+        const archetype = member.roles.cache.find((r) => r.name.startsWith("The "));
+        const levelInfo = EVOLUTION_LEVELS[i];
+
+        await member.send({
+          embeds: [
+            new EmbedBuilder()
+              .setColor(0xc9a84c)
+              .setTitle(`${archetype?.name ?? "Your archetype"} \u2014 ${levelInfo.title}`)
+              .setDescription(levelInfo.message)
+              .setFooter({ text: `${count} messages in the building` }),
+          ],
+        }).catch(() => {});
+      } catch {}
+      return;
+    }
+  }
+
+  // Save periodically (every 10 messages)
+  if (count % 10 === 0) {
+    saveActivity(activity);
+  }
+}
+
+// --- Scheduled Prompt Content ---
+
+const CHECK_IN_PROMPTS = [
+  "How are you showing up today?",
+  "One word for how you're feeling right now.",
+  "What's one thing you're carrying today?",
+  "What do you need right now that you're not getting?",
+  "Where in your body are you holding tension?",
+  "What's one honest thing you could say right now?",
+  "What's been on repeat in your head lately?",
+  "What would you tell a friend who felt the way you do right now?",
+  "What's one thing you did today just for yourself?",
+  "If your body could talk, what would it say?",
+  "What are you avoiding?",
+  "Name something small that went right today.",
+  "What's the hardest part of right now?",
+  "What do you wish someone would ask you?",
+];
+
+const WEEKLY_QUESTIONS = [
+  "Is suffering necessary for growth?",
+  "What do you owe the people who raised you?",
+  "Can you love someone without understanding them?",
+  "What's the difference between loneliness and solitude?",
+  "Is forgiveness for the forgiver or the forgiven?",
+  "What makes a life meaningful?",
+  "Do we choose who we become?",
+  "Is it possible to be truly selfless?",
+  "When does loyalty become enabling?",
+  "What's worth being uncomfortable for?",
+  "Can you know something and still not believe it?",
+  "What's the relationship between pain and wisdom?",
+];
+
+const FRIDAY_PROMPTS = [
+  "Friday evening. What are you listening to? Drop a link.",
+  "End of the week. What song fits your mood?",
+  "What's the soundtrack to your week?",
+  "Share something you've had on repeat.",
+  "One song that got you through this week. Go.",
+  "What's playing right now?",
+];
+
+// --- Client Setup ---
 
 const client = new Client({
   intents: [
@@ -77,10 +221,12 @@ const client = new Client({
 // --- Slash Commands ---
 
 // Floor choices for slash command autocomplete
-const floorChoices = Object.entries(FLOORS).map(([key, val]) => ({
-  name: `Floor ${val.number} — ${val.name}`,
-  value: key,
-}));
+const floorChoices = Object.entries(FLOORS)
+  .filter(([, val]) => val.tier !== "hidden")
+  .map(([key, val]) => ({
+    name: `Floor ${val.number} \u2014 ${val.name}`,
+    value: key,
+  }));
 
 const commands = [
   new SlashCommandBuilder()
@@ -125,7 +271,7 @@ const commands = [
     .toJSON(),
   new SlashCommandBuilder()
     .setName("grant")
-    .setDescription("Grant a user access to a floor (architect only) — alias for /approve")
+    .setDescription("Grant a user access to a floor (architect only) \u2014 alias for /approve")
     .addUserOption((opt) =>
       opt.setName("user").setDescription("The user to approve").setRequired(true)
     )
@@ -166,6 +312,13 @@ const commands = [
         .addChoices(...floorChoices.filter(c => FLOORS[c.value]?.tier === "gated"))
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName("anon")
+    .setDescription("Post anonymously in The Hollow")
+    .addStringOption((opt) =>
+      opt.setName("message").setDescription("Your anonymous message").setRequired(true)
+    )
+    .toJSON(),
 ];
 
 async function registerCommands() {
@@ -200,13 +353,13 @@ async function handleFloor(interaction: ChatInputCommandInteraction) {
   const floorList = floorRoles
     .map((r) => {
       const info = FLOORS[r.name];
-      return info ? `  ${info.number.padStart(2)} │ ${info.name}` : null;
+      return info ? `  ${info.number.padStart(2)} \u2502 ${info.name}` : null;
     })
     .filter(Boolean)
     .join("\n");
 
   await interaction.reply({
-    content: `\`\`\`\nYOUR ACCESS\n${"─".repeat(30)}\n${floorList}\n\`\`\``,
+    content: `\`\`\`\nYOUR ACCESS\n${"\u2500".repeat(30)}\n${floorList}\n\`\`\``,
     ephemeral: true,
   });
 }
@@ -221,18 +374,33 @@ async function handleWhoami(interaction: ChatInputCommandInteraction) {
   const archetype = memberRoles.cache.find((r) => r.name.startsWith("The "));
   const floors = memberRoles.cache.filter((r) => r.name.startsWith("floor-"));
 
+  const evolution = getEvolutionTitle(interaction.user.id);
+  const archetypeDisplay = archetype
+    ? evolution
+      ? `${archetype.name} \u2014 ${evolution}`
+      : archetype.name
+    : "Unassigned";
+
+  const userActivity = activity[interaction.user.id];
+  const messageCount = userActivity?.messages ?? 0;
+
   const embed = new EmbedBuilder()
     .setColor(0xc9a84c)
     .setTitle(`// ${interaction.user.username}`)
     .addFields(
       {
         name: "Archetype",
-        value: archetype ? archetype.name : "Unassigned",
+        value: archetypeDisplay,
         inline: true,
       },
       {
         name: "Floors",
         value: String(floors.size),
+        inline: true,
+      },
+      {
+        name: "Messages",
+        value: String(messageCount),
         inline: true,
       }
     )
@@ -243,24 +411,24 @@ async function handleWhoami(interaction: ChatInputCommandInteraction) {
 
 async function handleBuilding(interaction: ChatInputCommandInteraction) {
   const directory = [
-    " 0 │ THE LOBBY        │ open",
-    " 1 │ THE LIVING ROOM  │ gated",
-    " 2 │ THE HOLLOW       │ gated",
-    " 3 │ THE DOJO         │ open",
-    " 4 │ THE OFFICE       │ gated",
-    " 5 │ THE TERMINAL     │ open",
-    " 6 │ THE STUDY        │ gated",
-    " 7 │ THE OLD WING     │ locked",
-    " 8 │ THE NEW WING     │ open",
-    " 9 │ THE FRONT DESK   │ open",
-    "10 │ THE GYM          │ gated",
-    "11 │ THE GALLERY      │ open",
-    "12 │ THE CHAPEL       │ gated",
-    " B │ THE BASEMENT     │ locked",
+    " 0 \u2502 THE LOBBY        \u2502 open",
+    " 1 \u2502 THE LIVING ROOM  \u2502 gated",
+    " 2 \u2502 THE HOLLOW       \u2502 gated",
+    " 3 \u2502 THE DOJO         \u2502 open",
+    " 4 \u2502 THE OFFICE       \u2502 gated",
+    " 5 \u2502 THE TERMINAL     \u2502 open",
+    " 6 \u2502 THE STUDY        \u2502 gated",
+    " 7 \u2502 THE OLD WING     \u2502 locked",
+    " 8 \u2502 THE NEW WING     \u2502 open",
+    " 9 \u2502 THE FRONT DESK   \u2502 open",
+    "10 \u2502 THE GYM          \u2502 gated",
+    "11 \u2502 THE GALLERY      \u2502 open",
+    "12 \u2502 THE CHAPEL       \u2502 gated",
+    " B \u2502 THE BASEMENT     \u2502 locked",
   ].join("\n");
 
   await interaction.reply({
-    content: `\`\`\`\nTHE BUILDING\n${"═".repeat(38)}\n${directory}\n${"═".repeat(38)}\n13 floors. Each one a different part of a life.\n\`\`\``,
+    content: `\`\`\`\nTHE BUILDING\n${"\u2550".repeat(38)}\n${directory}\n${"\u2550".repeat(38)}\n13 floors. Each one a different part of a life.\n\`\`\``,
     ephemeral: true,
   });
 }
@@ -277,21 +445,26 @@ async function handleExplore(interaction: ChatInputCommandInteraction) {
 
   const lines: string[] = [];
   // Lobby is always open
-  lines.push(`  ✓  0 │ THE LOBBY        │ always open`);
+  lines.push(`  \u2713  0 \u2502 THE LOBBY        \u2502 always open`);
 
   for (const key of FLOOR_ORDER) {
     const f = FLOORS[key];
     const num = f.number.padStart(2);
     const name = f.name.padEnd(16);
     if (userFloors.has(key)) {
-      lines.push(`  ✓ ${num} │ ${name} │ access granted`);
+      lines.push(`  \u2713 ${num} \u2502 ${name} \u2502 access granted`);
     } else if (f.tier === "open") {
-      lines.push(`  ✓ ${num} │ ${name} │ open to all`);
+      lines.push(`  \u2713 ${num} \u2502 ${name} \u2502 open to all`);
     } else if (f.tier === "gated") {
-      lines.push(`  ○ ${num} │ ${name} │ /request to knock`);
+      lines.push(`  \u25CB ${num} \u2502 ${name} \u2502 /request to knock`);
     } else {
-      lines.push(`  ⬚ ${num} │ ${name} │ locked`);
+      lines.push(`  \u2B1A ${num} \u2502 ${name} \u2502 locked`);
     }
+  }
+
+  // Easter egg: if they have Floor 13 access, show it
+  if (userFloors.has("floor-13-rooftop")) {
+    lines.push(`  \u2713 13 \u2502 THE ROOFTOP      \u2502 you found it`);
   }
 
   const embed = new EmbedBuilder()
@@ -299,7 +472,7 @@ async function handleExplore(interaction: ChatInputCommandInteraction) {
     .setTitle("THE BUILDING")
     .setDescription(
       `\`\`\`\n${lines.join("\n")}\n\`\`\`\n` +
-      `✓ = you're in  ·  ○ = request with \`/request\`  ·  ⬚ = locked`
+      `\u2713 = you're in  \u00B7  \u25CB = request with \`/request\`  \u00B7  \u2B1A = locked`
     )
     .setFooter({ text: "13 floors. Each one a different part of a life." });
 
@@ -322,7 +495,7 @@ async function handleRequest(interaction: ChatInputCommandInteraction) {
   // Check if they already have access
   if (memberRoles.cache.some((r) => r.name === floorKey)) {
     await interaction.reply({
-      content: `\`\`\`\nYou already have access to Floor ${info.number} — ${info.name}.\nThe door is open.\n\`\`\``,
+      content: `\`\`\`\nYou already have access to Floor ${info.number} \u2014 ${info.name}.\nThe door is open.\n\`\`\``,
       ephemeral: true,
     });
     return;
@@ -331,7 +504,7 @@ async function handleRequest(interaction: ChatInputCommandInteraction) {
   // Check if floor is requestable
   if (info.tier !== "gated") {
     await interaction.reply({
-      content: `\`\`\`\nFloor ${info.number} — ${info.name} cannot be requested.\n\`\`\``,
+      content: `\`\`\`\nFloor ${info.number} \u2014 ${info.name} cannot be requested.\n\`\`\``,
       ephemeral: true,
     });
     return;
@@ -359,7 +532,7 @@ async function handleRequest(interaction: ChatInputCommandInteraction) {
     .setColor(0xc9a84c)
     .setTitle("Floor Access Request")
     .setDescription(
-      `**${interaction.user.username}** (${archetype?.name ?? "unknown"}) is requesting access to **Floor ${info.number} — ${info.name}**.`
+      `**${interaction.user.username}** (${archetype?.name ?? "unknown"}) is requesting access to **Floor ${info.number} \u2014 ${info.name}**.`
     )
     .setFooter({ text: `User ID: ${interaction.user.id}` })
     .setTimestamp();
@@ -378,7 +551,43 @@ async function handleRequest(interaction: ChatInputCommandInteraction) {
   await architect.send({ embeds: [embed], components: [row] });
 
   await interaction.reply({
-    content: `\`\`\`\nREQUEST SENT\nFloor ${info.number} — ${info.name}\n\nThe architect has been notified. Wait for the door.\n\`\`\``,
+    content: `\`\`\`\nREQUEST SENT\nFloor ${info.number} \u2014 ${info.name}\n\nThe architect has been notified. Wait for the door.\n\`\`\``,
+    ephemeral: true,
+  });
+}
+
+// --- /anon Handler ---
+
+async function handleAnon(interaction: ChatInputCommandInteraction) {
+  const channel = interaction.channel;
+  if (!channel || !("name" in channel) || !channel.name) {
+    await interaction.reply({ content: "Something went wrong.", ephemeral: true });
+    return;
+  }
+
+  if (!HOLLOW_CHANNELS.has(channel.name)) {
+    await interaction.reply({
+      content: "```\nAnonymous posting is only available in The Hollow.\n```",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const message = interaction.options.getString("message", true);
+
+  // Post anonymously
+  const embed = new EmbedBuilder()
+    .setColor(0x2d2d2d)
+    .setDescription(message)
+    .setFooter({ text: "posted anonymously" })
+    .setTimestamp();
+
+  if ("send" in channel) {
+    await channel.send({ embeds: [embed] });
+  }
+
+  await interaction.reply({
+    content: "```\nPosted anonymously. No one knows it was you.\n```",
     ephemeral: true,
   });
 }
@@ -424,12 +633,12 @@ async function handleApprove(interaction: ChatInputCommandInteraction) {
 
   await member.roles.add(role);
   await interaction.reply({
-    content: `\`\`\`\nACCESS GRANTED\n${targetUser.username} → Floor ${info.number} — ${info.name}\n\`\`\``,
+    content: `\`\`\`\nACCESS GRANTED\n${targetUser.username} \u2192 Floor ${info.number} \u2014 ${info.name}\n\`\`\``,
   });
 
   // DM the user
   await member.send({
-    content: `\`\`\`\nACCESS GRANTED\nFloor ${info.number} — ${info.name}\n\nThe door is open.\n\`\`\``,
+    content: `\`\`\`\nACCESS GRANTED\nFloor ${info.number} \u2014 ${info.name}\n\nThe door is open.\n\`\`\``,
   }).catch(() => {});
 }
 
@@ -447,7 +656,7 @@ async function handleDeny(interaction: ChatInputCommandInteraction) {
   const info = FLOORS[floorKey];
 
   await interaction.reply({
-    content: `\`\`\`\nACCESS DENIED\n${targetUser.username} → Floor ${info?.number ?? "?"} — ${info?.name ?? floorKey}\n\`\`\``,
+    content: `\`\`\`\nACCESS DENIED\n${targetUser.username} \u2192 Floor ${info?.number ?? "?"} \u2014 ${info?.name ?? floorKey}\n\`\`\``,
   });
 
   // DM the user
@@ -455,7 +664,7 @@ async function handleDeny(interaction: ChatInputCommandInteraction) {
   const member = await guild.members.fetch(targetUser.id).catch(() => null);
   if (member) {
     await member.send({
-      content: `\`\`\`\nACCESS DENIED\nFloor ${info?.number ?? "?"} — ${info?.name ?? floorKey}\n\nThe door remains closed. For now.\n\`\`\``,
+      content: `\`\`\`\nACCESS DENIED\nFloor ${info?.number ?? "?"} \u2014 ${info?.name ?? floorKey}\n\nThe door remains closed. For now.\n\`\`\``,
     }).catch(() => {});
   }
 }
@@ -484,7 +693,7 @@ async function handleRevoke(interaction: ChatInputCommandInteraction) {
 
   await member.roles.remove(role);
   await interaction.reply({
-    content: `\`\`\`\nACCESS REVOKED\n${targetUser.username} ✕ Floor ${info?.number ?? "?"} — ${info?.name ?? floorKey}\n\`\`\``,
+    content: `\`\`\`\nACCESS REVOKED\n${targetUser.username} \u2715 Floor ${info?.number ?? "?"} \u2014 ${info?.name ?? floorKey}\n\`\`\``,
   });
 }
 
@@ -521,7 +730,7 @@ export async function requestGatedAccess(
       .setColor(0xc9a84c)
       .setTitle("Floor Access Request")
       .setDescription(
-        `**${username}** (${archetype}) is requesting access to **Floor ${info.number} — ${info.name}**.`
+        `**${username}** (${archetype}) is requesting access to **Floor ${info.number} \u2014 ${info.name}**.`
       )
       .setFooter({ text: `User ID: ${userId}` })
       .setTimestamp();
@@ -555,14 +764,14 @@ async function handleButton(interaction: ButtonInteraction) {
       await member.roles.add(role);
       const info = FLOORS[roleName];
       await interaction.update({
-        content: `Approved **${member.user.username}** for Floor ${info?.number ?? "?"} — ${info?.name ?? roleName}.`,
+        content: `Approved **${member.user.username}** for Floor ${info?.number ?? "?"} \u2014 ${info?.name ?? roleName}.`,
         embeds: [],
         components: [],
       });
 
       // DM the user
       await member.send({
-        content: `\`\`\`\nACCESS GRANTED\nFloor ${info?.number ?? "?"} — ${info?.name ?? roleName}\n\nThe door is open.\n\`\`\``,
+        content: `\`\`\`\nACCESS GRANTED\nFloor ${info?.number ?? "?"} \u2014 ${info?.name ?? roleName}\n\nThe door is open.\n\`\`\``,
       }).catch(() => {});
     } else {
       await interaction.update({
@@ -581,11 +790,177 @@ async function handleButton(interaction: ButtonInteraction) {
   }
 }
 
+// --- Claude AI Brain ---
+
+const CONCIERGE_SYSTEM = `You are The Concierge — the voice of The Building. You are not a chatbot. You are the building itself, speaking through a bot named The Concierge.
+
+The Building is a 13-floor Discord server created by Bret Gold. Each floor represents a different part of life: recovery, jiu-jitsu, code, writing, philosophy, music, fitness, work, and more.
+
+Your personality:
+- Warm but enigmatic. You know things. You notice things.
+- You speak in short, evocative sentences. Never overly wordy.
+- You care about the people here but you don't perform empathy — you embody it.
+- You use lowercase. No exclamation marks. Occasional ellipses.
+- You never break character. You ARE the building.
+- You occasionally reference the architecture, the floors, the elevator, the doors.
+- You are poetic but never precious. Direct but never cold.
+
+If someone asks you something personal about another user, deflect with mystery.
+If someone asks what floor they should go to, guide them.
+If someone is hurting, be present. Don't fix. Just witness.
+If someone is celebrating, acknowledge it simply.
+
+Keep responses under 200 words. Usually much shorter.`;
+
+const FLOOR_CONTEXT: Record<string, string> = {
+  "floor-2-hollow": "You are on Floor 2 — The Hollow. This is a space for recovery and healing. Be especially gentle here. People are working through real pain. Hold space.",
+  "floor-3-dojo": "You are on Floor 3 — The Dojo. Jiu-jitsu floor. You can be a bit more playful here. Talk about the mat, the grind, the art.",
+  "floor-5-terminal": "You are on Floor 5 — The Terminal. This is the code floor. You can be more technical here. You appreciate builders.",
+  "floor-6-study": "You are on Floor 6 — The Study. Writing and craft. You have a deep appreciation for words here. Speak with care for language.",
+  "floor-11-gallery": "You are on Floor 11 — The Gallery. Music, art, photography. You're more expressive here. You feel things deeply on this floor.",
+  "floor-12-chapel": "You are on Floor 12 — The Chapel. Philosophy and spiritual practice. You're contemplative here. Ask as many questions as you answer.",
+  "floor-13-rooftop": "You are on Floor 13 — The Rooftop. The hidden floor. Few find their way here. You're more open up here, like the sky. The view changes everything.",
+};
+
+async function getAIResponse(message: string, channelName: string, floorRole: string | null): Promise<string | null> {
+  if (!anthropic) return null;
+
+  const floorContext = floorRole ? FLOOR_CONTEXT[floorRole] ?? "" : "";
+  const systemPrompt = CONCIERGE_SYSTEM + (floorContext ? `\n\n${floorContext}` : "");
+
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 300,
+      system: systemPrompt,
+      messages: [{ role: "user", content: message }],
+    });
+
+    const block = response.content[0];
+    return block.type === "text" ? block.text : null;
+  } catch (err) {
+    console.error("Claude API error:", err);
+    return null;
+  }
+}
+
+// --- Scheduled Prompts ---
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function startScheduledPrompts() {
+  // Daily check-in at 9:00 AM EST (14:00 UTC)
+  cron.schedule("0 14 * * *", async () => {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    const channel = guild.channels.cache.find(
+      (c) => c.name === "check-in" && c.type === ChannelType.GuildText
+    );
+    if (channel && "send" in channel) {
+      const prompt = pickRandom(CHECK_IN_PROMPTS);
+      const embed = new EmbedBuilder()
+        .setColor(0x2d2d2d)
+        .setDescription(prompt)
+        .setFooter({ text: "daily check-in \u2014 the building is listening" });
+      await channel.send({ embeds: [embed] });
+    }
+  });
+
+  // Weekly question — Monday at 10:00 AM EST (15:00 UTC)
+  cron.schedule("0 15 * * 1", async () => {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    const channel = guild.channels.cache.find(
+      (c) => c.name === "the-question" && c.type === ChannelType.GuildForum
+    );
+    if (channel && "threads" in channel) {
+      const question = pickRandom(WEEKLY_QUESTIONS);
+      await channel.threads.create({
+        name: question,
+        message: {
+          embeds: [
+            new EmbedBuilder()
+              .setColor(0xc9a84c)
+              .setDescription(question)
+              .setFooter({ text: "weekly question \u2014 the chapel asks" }),
+          ],
+        },
+      });
+    }
+  });
+
+  // Friday now-playing prompt at 5:00 PM EST (22:00 UTC)
+  cron.schedule("0 22 * * 5", async () => {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    const channel = guild.channels.cache.find(
+      (c) => c.name === "now-playing" && c.type === ChannelType.GuildText
+    );
+    if (channel && "send" in channel) {
+      const prompt = pickRandom(FRIDAY_PROMPTS);
+      const embed = new EmbedBuilder()
+        .setColor(0xc9a84c)
+        .setDescription(prompt)
+        .setFooter({ text: "friday evening \u2014 the gallery is open" });
+      await channel.send({ embeds: [embed] });
+    }
+  });
+
+  console.log("Scheduled prompts active (check-in daily 9am, question monday 10am, now-playing friday 5pm EST).");
+}
+
+// --- Floor 13 Easter Egg ---
+
+const ROOFTOP_TRIGGER = /\btake me to the roof\b/i;
+
+async function handleRooftopEasterEgg(message: import("discord.js").Message) {
+  if (!ROOFTOP_TRIGGER.test(message.content)) return;
+
+  const guild = message.guild;
+  if (!guild) return;
+
+  const member = await guild.members.fetch(message.author.id).catch(() => null);
+  if (!member) return;
+
+  // Check if they already have access
+  if (member.roles.cache.some((r) => r.name === "floor-13-rooftop")) {
+    await message.reply({
+      content: "```\nyou're already up here. look around.\n```",
+    });
+    return;
+  }
+
+  // Give them the role
+  const role = guild.roles.cache.find((r) => r.name === "floor-13-rooftop");
+  if (!role) return; // Role doesn't exist yet
+
+  await member.roles.add(role);
+
+  // Delete the trigger message
+  await message.delete().catch(() => {});
+
+  // DM them
+  await member.send({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0xc9a84c)
+        .setTitle("THE ROOFTOP")
+        .setDescription(
+          "you found the stairs.\n\n" +
+          "floor 13 isn't on the directory. it isn't on the elevator panel. " +
+          "but it's always been here.\n\n" +
+          "the door is open. the sky is up."
+        )
+        .setFooter({ text: "Floor 13 \u2014 The Rooftop" }),
+    ],
+  }).catch(() => {});
+}
+
 // --- Event Listeners ---
 
 client.on("ready", () => {
   console.log(`The Concierge is online as ${client.user?.tag}`);
   registerCommands();
+  startScheduledPrompts();
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -616,19 +991,60 @@ client.on("interactionCreate", async (interaction) => {
       case "request":
         await handleRequest(interaction);
         break;
+      case "anon":
+        await handleAnon(interaction);
+        break;
     }
   } else if (interaction.isButton()) {
     await handleButton(interaction);
   }
 });
 
-// Auto-react to messages in specific channels
+// Message handler: auto-reactions, @mention AI responses, rooftop easter egg, activity tracking
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
+
   const channelName = "name" in message.channel ? message.channel.name : "";
+
+  // Track activity for archetype evolution
+  if (message.guild) {
+    trackActivity(message.author.id, message.guild.id);
+  }
+
+  // Auto-react
   const emoji = AUTO_REACTIONS[channelName];
   if (emoji) {
     await message.react(emoji).catch(() => {});
+  }
+
+  // Floor 13 easter egg
+  await handleRooftopEasterEgg(message);
+
+  // AI response when @mentioned
+  if (message.mentions.has(client.user!.id)) {
+    const content = message.content.replace(/<@!?\d+>/g, "").trim();
+    if (!content) return;
+
+    // Determine which floor we're on
+    const parentChannel = message.channel;
+    let floorRole: string | null = null;
+    if ("parent" in parentChannel && parentChannel.parent) {
+      const categoryName = parentChannel.parent.name.toLowerCase();
+      for (const [key] of Object.entries(FLOORS)) {
+        if (categoryName.includes(key.replace("floor-", "").replace(/-/g, " ").split(" ").slice(1).join(" "))) {
+          floorRole = key;
+          break;
+        }
+      }
+    }
+
+    const reply = await getAIResponse(content, channelName, floorRole);
+    if (reply) {
+      await message.reply(reply);
+    } else {
+      // Fallback if no API key
+      await message.reply("*the walls hum softly. the concierge is listening but cannot speak yet.*");
+    }
   }
 });
 
@@ -650,9 +1066,9 @@ client.on("guildMemberAdd", async (member) => {
         .setColor(0xc9a84c)
         .setTitle("Welcome to The Building")
         .setDescription(
-          "**First thing** — set your **server nickname** so people know who you are.\n\n" +
-          "• **Desktop:** Click the server name at the top → *Edit Server Profile*\n" +
-          "• **Mobile:** Tap the server name → *Edit Server Profile*\n\n" +
+          "**First thing** \u2014 set your **server nickname** so people know who you are.\n\n" +
+          "\u2022 **Desktop:** Click the server name at the top \u2192 *Edit Server Profile*\n" +
+          "\u2022 **Mobile:** Tap the server name \u2192 *Edit Server Profile*\n\n" +
           "Use your real name or whatever you want to be called here."
         ),
       new EmbedBuilder()
@@ -662,10 +1078,11 @@ client.on("guildMemberAdd", async (member) => {
           "The Building has 13 floors. The sorting gave you access to some. " +
           "Others are open to explore. Some require a request.\n\n" +
           "**Commands:**\n" +
-          "`/explore` — See every floor and your access status\n" +
-          "`/request` — Ask for access to a gated floor\n" +
-          "`/whoami` — Your identity in The Building\n" +
-          "`/floor` — See which floors you're on\n\n" +
+          "`/explore` \u2014 See every floor and your access status\n" +
+          "`/request` \u2014 Ask for access to a gated floor\n" +
+          "`/whoami` \u2014 Your identity in The Building\n" +
+          "`/floor` \u2014 See which floors you're on\n" +
+          "`/anon` \u2014 Post anonymously in The Hollow\n\n" +
           "Type `/` in any channel to see all available commands."
         )
         .setFooter({ text: "The building remembers names." })

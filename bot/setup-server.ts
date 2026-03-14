@@ -95,6 +95,11 @@ const FLOOR_CONFIG = [
     channels: ["the-altar", "the-question", "the-practice"],
   },
   {
+    name: "FLOOR 13 — THE ROOFTOP",
+    role: "floor-13-rooftop",
+    channels: ["the-rooftop", "the-edge"],
+  },
+  {
     name: "FLOOR B — THE BASEMENT",
     role: "floor-b-basement",
     channels: ["server-logs", "bot-workshop"],
