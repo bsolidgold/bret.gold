@@ -1,14 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
 import { TerminalType } from "@/components/effects/terminal-type";
+import { getResident, clearResident, getFloorDisplay, type ResidentData } from "@/lib/resident";
+
+const GUILD_ID = process.env.NEXT_PUBLIC_DISCORD_GUILD_ID;
 
 export default function Home() {
-  const [phase, setPhase] = useState<"boot" | "title" | "ready">("boot");
+  const [phase, setPhase] = useState<"loading" | "boot" | "title" | "ready" | "resident">("loading");
   const [hovered, setHovered] = useState(false);
+  const [resident, setResidentState] = useState<ResidentData | null>(null);
+
+  // Check for returning resident on mount
+  useEffect(() => {
+    const data = getResident();
+    if (data) {
+      setResidentState(data);
+      setPhase("resident");
+    } else {
+      setPhase("boot");
+    }
+  }, []);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void">
@@ -25,8 +40,13 @@ export default function Home() {
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-64 w-96 -translate-x-1/2 rounded-full bg-gold/5 blur-3xl" />
 
       <main className="relative z-10 flex flex-col items-center gap-12 px-8">
-        {/* Boot sequence */}
         <AnimatePresence mode="wait">
+          {/* Loading state — prevents flash of wrong content */}
+          {phase === "loading" && (
+            <motion.div key="loading" className="h-16" />
+          )}
+
+          {/* Boot sequence — new visitors */}
           {phase === "boot" && (
             <motion.div
               key="boot"
@@ -162,19 +182,163 @@ export default function Home() {
               </motion.div>
             </motion.div>
           )}
+
+          {/* Returning resident view */}
+          {phase === "resident" && resident && (
+            <motion.div
+              key="resident"
+              className="flex flex-col items-center gap-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.5 }}
+            >
+              {/* Floor indicator */}
+              <div className="flex items-center gap-3 text-xs text-foreground/30">
+                <div className="h-px w-8 bg-foreground/20" />
+                <span>FLOOR 0 // LOBBY</span>
+                <div className="h-px w-8 bg-foreground/20" />
+              </div>
+
+              <div className="flex flex-col items-center gap-4">
+                <GlitchText
+                  text="GOLD"
+                  className="text-5xl font-bold tracking-[0.3em] text-gold sm:text-7xl"
+                  as="h1"
+                  glitchInterval={4000}
+                  glitchIntensity={0.2}
+                />
+                <CipherReveal
+                  text={`WELCOME BACK, ${resident.archetype.toUpperCase()}`}
+                  className="text-sm tracking-[0.2em] text-foreground/40"
+                  duration={1000}
+                  delay={300}
+                />
+              </div>
+
+              {/* Floor access list */}
+              <motion.div
+                className="flex w-full max-w-sm flex-col gap-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1, duration: 1 }}
+              >
+                <p className="mb-1 text-xs tracking-[0.2em] text-gold/30">
+                  YOUR FLOORS
+                </p>
+                {resident.primaryFloorRoles.map((role) => {
+                  const floor = getFloorDisplay(role);
+                  if (!floor) return null;
+                  return (
+                    <div
+                      key={role}
+                      className="flex items-center gap-3 border border-gold/15 px-4 py-2"
+                    >
+                      <span className="text-sm font-bold text-gold/50">
+                        {floor.number}
+                      </span>
+                      <span className="text-xs text-foreground/50">
+                        {floor.name}
+                      </span>
+                    </div>
+                  );
+                })}
+                {/* Always-open floors */}
+                <div className="flex items-center gap-3 border border-foreground/8 px-4 py-2">
+                  <span className="text-sm font-bold text-foreground/25">0</span>
+                  <span className="text-xs text-foreground/35">THE LOBBY</span>
+                  <span className="ml-auto text-[10px] text-foreground/20">always open</span>
+                </div>
+                <div className="flex items-center gap-3 border border-foreground/8 px-4 py-2">
+                  <span className="text-sm font-bold text-foreground/25">8</span>
+                  <span className="text-xs text-foreground/35">THE NEW WING</span>
+                  <span className="ml-auto text-[10px] text-foreground/20">all arrivals</span>
+                </div>
+                {/* Gated floors */}
+                {resident.gatewayFloorRoles.length > 0 &&
+                  resident.gatewayFloorRoles.map((role) => {
+                    const floor = getFloorDisplay(role);
+                    if (!floor) return null;
+                    return (
+                      <div
+                        key={role}
+                        className="flex items-center gap-3 border border-foreground/8 px-4 py-2 opacity-50"
+                      >
+                        <span className="text-sm font-bold text-foreground/25">
+                          {floor.number}
+                        </span>
+                        <span className="text-xs text-foreground/35">
+                          {floor.name}
+                        </span>
+                        <span className="ml-auto text-[10px] text-gold/25">
+                          pending
+                        </span>
+                      </div>
+                    );
+                  })}
+              </motion.div>
+
+              {/* Return to Discord */}
+              <motion.div
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.8 }}
+              >
+                <a
+                  href={GUILD_ID ? `https://discord.com/channels/${GUILD_ID}` : "https://discord.com/channels/@me"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative"
+                >
+                  <div className="border border-gold/30 px-8 py-3 transition-all duration-500 hover:border-gold/60 hover:bg-gold/5">
+                    <span className="text-sm tracking-[0.2em] text-gold/70">
+                      RETURN TO THE BUILDING
+                    </span>
+                  </div>
+                  <div className="absolute -left-1 -top-1 h-3 w-3 border-l border-t border-gold/40" />
+                  <div className="absolute -right-1 -top-1 h-3 w-3 border-r border-t border-gold/40" />
+                  <div className="absolute -bottom-1 -left-1 h-3 w-3 border-b border-l border-gold/40" />
+                  <div className="absolute -bottom-1 -right-1 h-3 w-3 border-b border-r border-gold/40" />
+                </a>
+              </motion.div>
+
+              {/* Footer */}
+              <motion.div
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2.5, duration: 2 }}
+              >
+                <p className="text-xs text-foreground/20">
+                  the building remembers you, {resident.username}.
+                </p>
+                <button
+                  onClick={() => {
+                    clearResident();
+                    window.location.reload();
+                  }}
+                  className="text-[10px] text-foreground/15 transition-colors hover:text-foreground/30"
+                >
+                  not you? start over.
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
       {/* Bottom signal indicator */}
-      <motion.div
-        className="fixed bottom-8 flex items-center gap-2 text-xs text-foreground/20"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 3, duration: 2 }}
-      >
-        <div className="h-1.5 w-1.5 rounded-full bg-gold/40" style={{ animation: "glow-pulse 3s infinite" }} />
-        <span>signal active</span>
-      </motion.div>
+      {phase !== "resident" && (
+        <motion.div
+          className="fixed bottom-8 flex items-center gap-2 text-xs text-foreground/20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 3, duration: 2 }}
+        >
+          <div className="h-1.5 w-1.5 rounded-full bg-gold/40" style={{ animation: "glow-pulse 3s infinite" }} />
+          <span>signal active</span>
+        </motion.div>
+      )}
     </div>
   );
 }

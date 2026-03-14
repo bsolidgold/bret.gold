@@ -7,6 +7,7 @@ import { QUESTIONS, type Question, type Answer, type Category } from "@/lib/sort
 import { calculateResult } from "@/lib/sorting/engine";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
+import { getResident, type ResidentData } from "@/lib/resident";
 
 function StandardQuestion({
   question,
@@ -255,6 +256,12 @@ export default function SortingPage() {
     Record<number, Partial<Record<Category, number>>>
   >({});
   const [transitioning, setTransitioning] = useState(false);
+  const [residentData, setResidentData] = useState<ResidentData | null>(null);
+
+  useEffect(() => {
+    const data = getResident();
+    if (data) setResidentData(data);
+  }, []);
 
   const handleAnswer = useCallback(
     (answer: Answer) => {
@@ -305,6 +312,47 @@ export default function SortingPage() {
         return <StandardQuestion question={q} onAnswer={handleAnswer} />;
     }
   };
+
+  // Returning resident gate
+  if (residentData) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-8">
+        <motion.div
+          className="flex flex-col items-center gap-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+        >
+          <p className="text-xs tracking-[0.3em] text-foreground/30">
+            THE ELEVATOR RECOGNIZES YOU
+          </p>
+
+          <GlitchText
+            text={residentData.archetype.toUpperCase()}
+            className="text-3xl font-bold tracking-wider text-gold sm:text-4xl"
+            as="h1"
+            glitchInterval={3000}
+            glitchIntensity={0.2}
+          />
+
+          <p className="max-w-sm text-center text-sm leading-relaxed text-foreground/40">
+            You have already been sorted.
+            <br />
+            The building remembers.
+          </p>
+
+          <div className="mt-8">
+            <a
+              href="/"
+              className="border border-gold/30 px-8 py-3 text-sm tracking-[0.2em] text-gold/70 transition-all duration-500 hover:border-gold/60 hover:bg-gold/5"
+            >
+              RETURN TO LOBBY
+            </a>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-8">

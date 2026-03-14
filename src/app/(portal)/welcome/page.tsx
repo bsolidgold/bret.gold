@@ -1,15 +1,29 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
+import { setResident, decodeBase64Url } from "@/lib/resident";
 
 function WelcomeContent() {
   const searchParams = useSearchParams();
   const user = searchParams.get("user") || "stranger";
   const archetype = searchParams.get("archetype") || "";
+
+  // Store resident data in localStorage for returning user detection
+  useEffect(() => {
+    const residentParam = searchParams.get("resident");
+    if (residentParam) {
+      try {
+        const data = JSON.parse(decodeBase64Url(residentParam));
+        setResident(data);
+      } catch {
+        // Non-critical — silently fail
+      }
+    }
+  }, [searchParams]);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-void px-8">

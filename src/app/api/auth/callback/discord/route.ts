@@ -117,50 +117,81 @@ export async function GET(request: Request) {
       }
     );
 
-    if (!addRes.ok && addRes.status !== 204) {
-      // 204 = already in guild, try adding roles directly
-      if (addRes.status === 204 || addRes.status === 201) {
-        // Success
-      } else {
-        // User might already be in the guild — try assigning roles directly
-        for (const roleId of rolesToAssign) {
-          await fetch(
-            `${DISCORD_API}/guilds/${guildId}/members/${user.id}/roles/${roleId}`,
-            {
-              method: "PUT",
-              headers: { Authorization: `Bot ${botToken}` },
-            }
-          );
-        }
+    // 201 = newly added, 204 = already in guild
+    if (addRes.status === 204) {
+      // User already in guild — assign roles individually
+      for (const roleId of rolesToAssign) {
+        await fetch(
+          `${DISCORD_API}/guilds/${guildId}/members/${user.id}/roles/${roleId}`,
+          {
+            method: "PUT",
+            headers: { Authorization: `Bot ${botToken}` },
+          }
+        );
       }
     }
 
-    // 5. Handle gated floor requests (send to approval system)
-    if (sorting?.gatewayFloorRoles && sorting.gatewayFloorRoles.length > 0) {
-      // Post to our internal API that the bot listens to
-      await fetch(
-        `${new URL(request.url).origin}/api/approve-request`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user.id,
-            username: user.username,
-            archetype: sorting.archetype,
-            floorRoles: sorting.gatewayFloorRoles,
-            secret: process.env.DISCORD_BOT_TOKEN, // simple auth
-          }),
+    // 5. Check existing roles to prevent duplicate approval requests
+    let existingRoleNames = new Set<string>();
+    try {
+      const memberRes = await fetch(
+        `${DISCORD_API}/guilds/${guildId}/members/${user.id}`,
+        { headers: { Authorization: `Bot ${botToken}` } }
+      );
+      if (memberRes.ok) {
+        const memberData = await memberRes.json();
+        const existingRoleIds = new Set<string>(memberData.roles || []);
+        for (const [name, id] of roleMap.entries()) {
+          if (existingRoleIds.has(id)) {
+            existingRoleNames.add(name);
+          }
         }
-      ).catch(() => {
-        // Non-critical — bot will handle this separately if available
-        console.log("Approval request API not available, bot will handle via DM");
-      });
+      }
+    } catch {
+      // If we can't fetch roles, proceed cautiously (send requests anyway)
     }
 
-    // 6. Redirect to welcome page
+    // 6. Handle gated floor requests — only for roles the user doesn't already have
+    if (sorting?.gatewayFloorRoles && sorting.gatewayFloorRoles.length > 0) {
+      const newGatewayRoles = sorting.gatewayFloorRoles.filter(
+        (role: string) => !existingRoleNames.has(role)
+      );
+
+      if (newGatewayRoles.length > 0) {
+        await fetch(
+          `${new URL(request.url).origin}/api/approve-request`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user.id,
+              username: user.username,
+              archetype: sorting.archetype,
+              floorRoles: newGatewayRoles,
+              secret: process.env.DISCORD_BOT_TOKEN,
+            }),
+          }
+        ).catch(() => {
+          console.log("Approval request API not available");
+        });
+      }
+    }
+
+    // 7. Build resident data for client-side localStorage
+    const residentData = {
+      discordId: user.id,
+      username: user.username,
+      archetype: sorting?.archetype || "",
+      primaryFloorRoles: sorting?.primaryFloorRoles || [],
+      gatewayFloorRoles: sorting?.gatewayFloorRoles || [],
+      joinedAt: new Date().toISOString(),
+    };
+    const residentParam = Buffer.from(JSON.stringify(residentData)).toString("base64url");
+
+    // 8. Redirect to welcome page with resident data
     return NextResponse.redirect(
       new URL(
-        `/welcome?user=${encodeURIComponent(user.username)}&archetype=${encodeURIComponent(sorting?.archetype || "")}`,
+        `/welcome?user=${encodeURIComponent(user.username)}&archetype=${encodeURIComponent(sorting?.archetype || "")}&resident=${residentParam}`,
         request.url
       )
     );

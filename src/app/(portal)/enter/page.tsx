@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
 import { TerminalType } from "@/components/effects/terminal-type";
+import { getResident } from "@/lib/resident";
 
 export default function EnterPage() {
+  const router = useRouter();
   const [phase, setPhase] = useState<"approach" | "door">("approach");
+  const [isResident, setIsResident] = useState(false);
+
+  useEffect(() => {
+    if (getResident()) setIsResident(true);
+  }, []);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void">
@@ -23,7 +31,11 @@ export default function EnterPage() {
             transition={{ duration: 1.5 }}
           >
             <TerminalType
-              lines={[
+              lines={isResident ? [
+                "you're standing in front of the door again.",
+                "it opens before you knock.",
+                "it remembers your hand.",
+              ] : [
                 "you're standing in front of a door.",
                 "it's heavier than you expected.",
                 "there's no handle. just a surface.",
@@ -33,7 +45,13 @@ export default function EnterPage() {
               lineDelay={600}
               prefix=""
               className="text-sm leading-loose text-foreground/50"
-              onComplete={() => setTimeout(() => setPhase("door"), 1000)}
+              onComplete={() => setTimeout(() => {
+                if (isResident) {
+                  router.push("/sorting");
+                } else {
+                  setPhase("door");
+                }
+              }, 1000)}
             />
           </motion.div>
         )}
@@ -65,7 +83,7 @@ export default function EnterPage() {
             >
               <div className="border border-gold/30 px-10 py-3 transition-all duration-500 hover:border-gold/60 hover:bg-gold/5">
                 <GlitchText
-                  text="KNOCK"
+                  text={isResident ? "ENTER" : "KNOCK"}
                   className="text-sm font-bold tracking-[0.3em] text-gold/70"
                   glitchInterval={3000}
                   glitchIntensity={0.5}
