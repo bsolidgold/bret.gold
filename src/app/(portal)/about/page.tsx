@@ -56,7 +56,7 @@ export default function AboutPage() {
             this building is the thing i built to hold
             everything i care about in one place.
             code on one floor. poetry on another.
-            recovery in the basement where it belongs.
+            and real human shit for real humans.
           </p>
           <p className="text-foreground/30">
             the building is always growing. so am i.
