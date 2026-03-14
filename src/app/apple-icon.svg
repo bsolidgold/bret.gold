@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <circle cx="90" cy="90" r="90" fill="#0a0a0a"/>
+  <circle cx="90" cy="90" r="81" fill="none" stroke="#c9a84c" stroke-width="8" opacity="0.85"/>
+  <text x="90" y="52" text-anchor="middle" fill="#c9a84c" font-family="'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="300" opacity="0.5">79</text>
+  <text x="90" y="112" text-anchor="middle" fill="#c9a84c" font-family="'Helvetica Neue', Arial, sans-serif" font-size="70" font-weight="700" letter-spacing="-3">Au</text>
+  <text x="90" y="140" text-anchor="middle" fill="#c9a84c" font-family="'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="400" letter-spacing="4" opacity="0.35">GOLD</text>
+</svg>
