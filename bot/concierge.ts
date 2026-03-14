@@ -37,6 +37,7 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const anthropic = ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: ANTHROPIC_API_KEY })
   : null;
+console.log(`[concierge] Anthropic API: ${anthropic ? "enabled" : "disabled (no key)"}`);
 
 // Floor metadata for display
 type FloorTier = "open" | "gated" | "locked" | "hidden";
@@ -838,8 +839,9 @@ async function getAIResponse(message: string, channelName: string, floorRole: st
 
     const block = response.content[0];
     return block.type === "text" ? block.text : null;
-  } catch (err) {
-    console.error("Claude API error:", err);
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    console.error("Claude API error:", e.status, e.message, JSON.stringify(err));
     return null;
   }
 }
