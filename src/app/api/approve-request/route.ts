@@ -49,40 +49,61 @@ export async function POST(request: Request) {
   // Floor name lookup
   const floorNames: Record<string, string> = {
     "floor-1-living-room": "Floor 1 — THE LIVING ROOM",
+    "floor-2-hollow": "Floor 2 — THE HOLLOW",
+    "floor-3-dojo": "Floor 3 — THE DOJO",
     "floor-4-office": "Floor 4 — THE OFFICE",
+    "floor-5-terminal": "Floor 5 — THE TERMINAL",
     "floor-6-study": "Floor 6 — THE STUDY",
+    "floor-7-old-wing": "Floor 7 — THE OLD WING",
+    "floor-8-new-wing": "Floor 8 — THE NEW WING",
+    "floor-9-front-desk": "Floor 9 — THE FRONT DESK",
     "floor-10-gym": "Floor 10 — THE GYM",
+    "floor-11-gallery": "Floor 11 — THE GALLERY",
     "floor-12-chapel": "Floor 12 — THE CHAPEL",
   };
 
-  const floorList = floorRoles
-    .map((r: string) => floorNames[r] || r)
-    .join("\n  ");
+  // Send one DM per floor with approve/deny buttons
+  for (const roleName of floorRoles as string[]) {
+    const floorLabel = floorNames[roleName] || roleName;
 
-  // Send approval request message
-  await fetch(`${DISCORD_API}/channels/${dmChannel.id}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bot ${botToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content: [
-        "```",
-        "FLOOR ACCESS REQUEST",
-        "════════════════════════════════",
-        `  User:      ${username}`,
-        `  Archetype: ${archetype}`,
-        `  Requesting:`,
-        `  ${floorList}`,
-        "",
-        `  User ID: ${userId}`,
-        "════════════════════════════════",
-        "Use /approve or /deny in the server.",
-        "```",
-      ].join("\n"),
-    }),
-  });
+    await fetch(`${DISCORD_API}/channels/${dmChannel.id}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        embeds: [
+          {
+            color: 0xc9a84c,
+            title: "Floor Access Request",
+            description: `**${username}** (${archetype}) is requesting access to **${floorLabel}**.`,
+            footer: { text: `User ID: ${userId}` },
+            timestamp: new Date().toISOString(),
+          },
+        ],
+        components: [
+          {
+            type: 1, // ActionRow
+            components: [
+              {
+                type: 2, // Button
+                style: 3, // Success (green)
+                label: "Approve",
+                custom_id: `approve_${userId}_${roleName}`,
+              },
+              {
+                type: 2, // Button
+                style: 4, // Danger (red)
+                label: "Deny",
+                custom_id: `deny_${userId}_${roleName}`,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

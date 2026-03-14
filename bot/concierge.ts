@@ -29,16 +29,19 @@ const GUILD_ID = process.env.DISCORD_GUILD_ID!;
 
 // Floor metadata for display
 const FLOORS: Record<string, { name: string; number: string; role: string }> = {
+  "floor-1-living-room": { name: "THE LIVING ROOM", number: "1", role: "floor-1-living-room" },
+  "floor-2-hollow": { name: "THE HOLLOW", number: "2", role: "floor-2-hollow" },
   "floor-3-dojo": { name: "THE DOJO", number: "3", role: "floor-3-dojo" },
+  "floor-4-office": { name: "THE OFFICE", number: "4", role: "floor-4-office" },
   "floor-5-terminal": { name: "THE TERMINAL", number: "5", role: "floor-5-terminal" },
+  "floor-6-study": { name: "THE STUDY", number: "6", role: "floor-6-study" },
+  "floor-7-old-wing": { name: "THE OLD WING", number: "7", role: "floor-7-old-wing" },
   "floor-8-new-wing": { name: "THE NEW WING", number: "8", role: "floor-8-new-wing" },
   "floor-9-front-desk": { name: "THE FRONT DESK", number: "9", role: "floor-9-front-desk" },
-  "floor-11-gallery": { name: "THE GALLERY", number: "11", role: "floor-11-gallery" },
-  "floor-1-living-room": { name: "THE LIVING ROOM", number: "1", role: "floor-1-living-room" },
-  "floor-4-office": { name: "THE OFFICE", number: "4", role: "floor-4-office" },
-  "floor-6-study": { name: "THE STUDY", number: "6", role: "floor-6-study" },
   "floor-10-gym": { name: "THE GYM", number: "10", role: "floor-10-gym" },
+  "floor-11-gallery": { name: "THE GALLERY", number: "11", role: "floor-11-gallery" },
   "floor-12-chapel": { name: "THE CHAPEL", number: "12", role: "floor-12-chapel" },
+  "floor-b-basement": { name: "THE BASEMENT", number: "B", role: "floor-b-basement" },
 };
 
 const client = new Client({
@@ -52,6 +55,12 @@ const client = new Client({
 
 // --- Slash Commands ---
 
+// Floor choices for slash command autocomplete
+const floorChoices = Object.entries(FLOORS).map(([key, val]) => ({
+  name: `Floor ${val.number} — ${val.name}`,
+  value: key,
+}));
+
 const commands = [
   new SlashCommandBuilder()
     .setName("floor")
@@ -64,6 +73,62 @@ const commands = [
   new SlashCommandBuilder()
     .setName("building")
     .setDescription("View the full building directory")
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName("approve")
+    .setDescription("Grant a user access to a floor (architect only)")
+    .addUserOption((opt) =>
+      opt.setName("user").setDescription("The user to approve").setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("floor")
+        .setDescription("The floor to grant access to")
+        .setRequired(true)
+        .addChoices(...floorChoices)
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName("deny")
+    .setDescription("Deny a user access to a floor (architect only)")
+    .addUserOption((opt) =>
+      opt.setName("user").setDescription("The user to deny").setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("floor")
+        .setDescription("The floor to deny access to")
+        .setRequired(true)
+        .addChoices(...floorChoices)
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName("grant")
+    .setDescription("Grant a user access to a floor (architect only) — alias for /approve")
+    .addUserOption((opt) =>
+      opt.setName("user").setDescription("The user to approve").setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("floor")
+        .setDescription("The floor to grant access to")
+        .setRequired(true)
+        .addChoices(...floorChoices)
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName("revoke")
+    .setDescription("Remove a user's access to a floor (architect only)")
+    .addUserOption((opt) =>
+      opt.setName("user").setDescription("The user to revoke").setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("floor")
+        .setDescription("The floor to revoke access from")
+        .setRequired(true)
+        .addChoices(...floorChoices)
+    )
     .toJSON(),
 ];
 
@@ -144,7 +209,7 @@ async function handleBuilding(interaction: ChatInputCommandInteraction) {
   const directory = [
     " 0 │ THE LOBBY        │ open",
     " 1 │ THE LIVING ROOM  │ gated",
-    " 2 │ THE HOLLOW       │ locked",
+    " 2 │ THE HOLLOW       │ gated",
     " 3 │ THE DOJO         │ open",
     " 4 │ THE OFFICE       │ gated",
     " 5 │ THE TERMINAL     │ open",
@@ -161,6 +226,111 @@ async function handleBuilding(interaction: ChatInputCommandInteraction) {
   await interaction.reply({
     content: `\`\`\`\nTHE BUILDING\n${"═".repeat(38)}\n${directory}\n${"═".repeat(38)}\n13 floors. Each one a different part of a life.\n\`\`\``,
     ephemeral: true,
+  });
+}
+
+// --- Architect-only command helpers ---
+
+function isArchitect(interaction: ChatInputCommandInteraction): boolean {
+  if (!interaction.member || !("roles" in interaction.member)) return false;
+  const roles = interaction.member.roles;
+  if (!("cache" in roles)) return false;
+  return roles.cache.some((r) => r.name === "architect");
+}
+
+async function handleApprove(interaction: ChatInputCommandInteraction) {
+  if (!isArchitect(interaction)) {
+    await interaction.reply({
+      content: "```\nAccess denied. Architect credentials required.\n```",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const targetUser = interaction.options.getUser("user", true);
+  const floorKey = interaction.options.getString("floor", true);
+  const info = FLOORS[floorKey];
+  if (!info) {
+    await interaction.reply({ content: "Unknown floor.", ephemeral: true });
+    return;
+  }
+
+  const guild = await client.guilds.fetch(GUILD_ID);
+  const member = await guild.members.fetch(targetUser.id).catch(() => null);
+  const role = guild.roles.cache.find((r) => r.name === floorKey);
+
+  if (!member) {
+    await interaction.reply({ content: "User not found in the server.", ephemeral: true });
+    return;
+  }
+  if (!role) {
+    await interaction.reply({ content: `Role \`${floorKey}\` not found.`, ephemeral: true });
+    return;
+  }
+
+  await member.roles.add(role);
+  await interaction.reply({
+    content: `\`\`\`\nACCESS GRANTED\n${targetUser.username} → Floor ${info.number} — ${info.name}\n\`\`\``,
+  });
+
+  // DM the user
+  await member.send({
+    content: `\`\`\`\nACCESS GRANTED\nFloor ${info.number} — ${info.name}\n\nThe door is open.\n\`\`\``,
+  }).catch(() => {});
+}
+
+async function handleDeny(interaction: ChatInputCommandInteraction) {
+  if (!isArchitect(interaction)) {
+    await interaction.reply({
+      content: "```\nAccess denied. Architect credentials required.\n```",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const targetUser = interaction.options.getUser("user", true);
+  const floorKey = interaction.options.getString("floor", true);
+  const info = FLOORS[floorKey];
+
+  await interaction.reply({
+    content: `\`\`\`\nACCESS DENIED\n${targetUser.username} → Floor ${info?.number ?? "?"} — ${info?.name ?? floorKey}\n\`\`\``,
+  });
+
+  // DM the user
+  const guild = await client.guilds.fetch(GUILD_ID);
+  const member = await guild.members.fetch(targetUser.id).catch(() => null);
+  if (member) {
+    await member.send({
+      content: `\`\`\`\nACCESS DENIED\nFloor ${info?.number ?? "?"} — ${info?.name ?? floorKey}\n\nThe door remains closed. For now.\n\`\`\``,
+    }).catch(() => {});
+  }
+}
+
+async function handleRevoke(interaction: ChatInputCommandInteraction) {
+  if (!isArchitect(interaction)) {
+    await interaction.reply({
+      content: "```\nAccess denied. Architect credentials required.\n```",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const targetUser = interaction.options.getUser("user", true);
+  const floorKey = interaction.options.getString("floor", true);
+  const info = FLOORS[floorKey];
+
+  const guild = await client.guilds.fetch(GUILD_ID);
+  const member = await guild.members.fetch(targetUser.id).catch(() => null);
+  const role = guild.roles.cache.find((r) => r.name === floorKey);
+
+  if (!member || !role) {
+    await interaction.reply({ content: "User or role not found.", ephemeral: true });
+    return;
+  }
+
+  await member.roles.remove(role);
+  await interaction.reply({
+    content: `\`\`\`\nACCESS REVOKED\n${targetUser.username} ✕ Floor ${info?.number ?? "?"} — ${info?.name ?? floorKey}\n\`\`\``,
   });
 }
 
@@ -275,6 +445,16 @@ client.on("interactionCreate", async (interaction) => {
         break;
       case "building":
         await handleBuilding(interaction);
+        break;
+      case "approve":
+      case "grant":
+        await handleApprove(interaction);
+        break;
+      case "deny":
+        await handleDeny(interaction);
+        break;
+      case "revoke":
+        await handleRevoke(interaction);
         break;
     }
   } else if (interaction.isButton()) {
