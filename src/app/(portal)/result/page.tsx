@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
 import { GlitchText } from "@/components/effects/glitch-text";
@@ -9,6 +9,7 @@ import { FLOORS } from "@/lib/sorting/questions";
 
 export default function ResultPage() {
   const [result, setResult] = useState<SortingResult | null>(null);
+  const [hollowRequested, setHollowRequested] = useState(false);
   const [phase, setPhase] = useState<
     "elevator" | "archetype" | "floors" | "complete"
   >("elevator");
@@ -251,6 +252,45 @@ export default function ResultPage() {
                   ))}
                 </div>
               )}
+
+              {/* The Hollow — appears if recovery is in top 3 */}
+              {result.ranked.indexOf("recovery") < 3 &&
+                !result.gatewayFloors.some((f) => f.number === 2) && (
+                <motion.div
+                  className="mt-6 flex flex-col items-center gap-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: (result.primaryFloors.length + result.gatewayFloors.length + 3) * 0.3 }}
+                >
+                  <div className="h-px w-16 bg-foreground/10" />
+                  {!hollowRequested ? (
+                    <button
+                      onClick={() => setHollowRequested(true)}
+                      className="group flex flex-col items-center gap-2 transition-all duration-500"
+                    >
+                      <p className="text-xs text-foreground/20 transition-colors group-hover:text-foreground/40">
+                        there&apos;s a second floor. if you know what the hollow is, knock.
+                      </p>
+                    </button>
+                  ) : (
+                    <motion.div
+                      className="flex items-center gap-3 border border-foreground/10 px-4 py-3 sm:gap-4 sm:px-6 w-full"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 0.5, x: 0 }}
+                    >
+                      <span className="text-lg font-bold text-foreground/30">
+                        2
+                      </span>
+                      <span className="text-sm text-foreground/40">
+                        THE HOLLOW
+                      </span>
+                      <span className="ml-auto text-xs text-gold/30">
+                        requested
+                      </span>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
             </div>
 
             {/* Join button (appears in "complete" phase) */}
@@ -267,6 +307,7 @@ export default function ResultPage() {
                     // Build sorting payload for OAuth state
                     const floorToRole = (num: number | "B") => {
                       const map: Record<string, string> = {
+                        "2": "floor-2-hollow",
                         "3": "floor-3-dojo",
                         "5": "floor-5-terminal",
                         "8": "floor-8-new-wing",
@@ -281,14 +322,21 @@ export default function ResultPage() {
                       return map[String(num)];
                     };
 
+                    const gatewayRoles = result.gatewayFloors
+                      .map((f) => floorToRole(f.number))
+                      .filter(Boolean);
+
+                    // Add The Hollow if requested
+                    if (hollowRequested) {
+                      gatewayRoles.push("floor-2-hollow");
+                    }
+
                     const sorting = JSON.stringify({
                       archetype: result.archetype.name,
                       primaryFloorRoles: result.primaryFloors
                         .map((f) => floorToRole(f.number))
                         .filter(Boolean),
-                      gatewayFloorRoles: result.gatewayFloors
-                        .map((f) => floorToRole(f.number))
-                        .filter(Boolean),
+                      gatewayFloorRoles: gatewayRoles,
                     });
 
                     window.location.href = `/api/auth/discord?sorting=${encodeURIComponent(sorting)}`;

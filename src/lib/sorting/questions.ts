@@ -22,7 +22,7 @@ export type Floor = {
 export const FLOORS: Floor[] = [
   { number: 0, name: "THE LOBBY", category: "personal", tier: "open" },
   { number: 1, name: "THE LIVING ROOM", category: "personal", tier: "gated" },
-  { number: 2, name: "THE HOLLOW", category: "recovery", tier: "locked" },
+  { number: 2, name: "THE HOLLOW", category: "recovery", tier: "gated" },
   { number: 3, name: "THE DOJO", category: "bjj", tier: "open" },
   { number: 4, name: "THE OFFICE", category: "work", tier: "gated" },
   { number: 5, name: "THE TERMINAL", category: "coding", tier: "open" },

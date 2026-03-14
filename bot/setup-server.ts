@@ -36,7 +36,12 @@ const FLOOR_CONFIG = [
   {
     name: "FLOOR 2 — THE HOLLOW",
     role: "floor-2-hollow",
-    channels: ["the-clearing", "dispatches", "the-back-room"],
+    channels: [
+      "the-clearing", "the-campfire", "check-in", "wins",
+      "cpt", "emdr", "parts-work", "dbt-skills",
+      "the-stable", "the-stage", "mind-body",
+      "the-forum", "resources", "the-back-room",
+    ],
   },
   {
     name: "FLOOR 3 — THE DOJO",
