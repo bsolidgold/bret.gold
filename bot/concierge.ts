@@ -840,9 +840,16 @@ async function getAIResponse(message: string, channelName: string, floorRole: st
     const block = response.content[0];
     return block.type === "text" ? block.text : null;
   } catch (err: unknown) {
-    const e = err as { status?: number; message?: string };
-    console.error("Claude API error:", e.status, e.message, JSON.stringify(err));
-    return null;
+    const e = err as { status?: number; message?: string; error?: { type?: string } };
+    console.error("Claude API error:", e.status, e.message);
+    // Return a helpful message instead of silent failure
+    if (e.status === 400 && e.message?.includes("credit")) {
+      return "*the concierge reaches for words but finds empty pockets. (API credits depleted — notify bret.)*";
+    }
+    if (e.status === 429) {
+      return "*the concierge is overwhelmed. too many voices at once. try again in a moment.*";
+    }
+    return "*the concierge falters. something is wrong behind the walls.*";
   }
 }
 
