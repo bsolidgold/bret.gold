@@ -44,6 +44,17 @@ const FLOORS: Record<string, { name: string; number: string; role: string }> = {
   "floor-b-basement": { name: "THE BASEMENT", number: "B", role: "floor-b-basement" },
 };
 
+// Auto-react rules: channel name -> emoji
+const AUTO_REACTIONS: Record<string, string> = {
+  "wins": "🏆",
+  "proof-of-life": "👁️",
+  "now-playing": "🎧",
+  "open-mat-signal": "🤙",
+  "check-in": "🫂",
+  "published": "📖",
+  "dev-log": "🚀",
+};
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -462,6 +473,16 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+// Auto-react to messages in specific channels
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  const channelName = "name" in message.channel ? message.channel.name : "";
+  const emoji = AUTO_REACTIONS[channelName];
+  if (emoji) {
+    await message.react(emoji).catch(() => {});
+  }
+});
+
 // Welcome new members
 client.on("guildMemberAdd", async (member) => {
   const channel = member.guild.channels.cache.find(
@@ -472,6 +493,23 @@ client.on("guildMemberAdd", async (member) => {
       `\`\`\`\nNew arrival detected: ${member.user.username}\nThe elevator is waiting.\n\`\`\``
     );
   }
+
+  // DM with nickname instructions
+  await member.send({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0xc9a84c)
+        .setTitle("Welcome to The Building")
+        .setDescription(
+          "One thing — set your **server nickname** so people know who you are.\n\n" +
+          "**How to do it:**\n" +
+          "• **Desktop:** Click the server name at the top → *Edit Server Profile* → set your nickname\n" +
+          "• **Mobile:** Tap the server name → *Edit Server Profile* → set your nickname\n\n" +
+          "Use your real name, a name people know you by, or whatever you want to be called here."
+        )
+        .setFooter({ text: "The building remembers names." })
+    ],
+  }).catch(() => {});
 });
 
 client.login(TOKEN);
