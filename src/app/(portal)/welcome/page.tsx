@@ -32,6 +32,7 @@ function WelcomeContent() {
     digestSent.current = true;
 
     const transcript = sessionStorage.getItem("interview_transcript");
+    const targetedQuestions = sessionStorage.getItem("targeted_questions");
     const sortingResult = sessionStorage.getItem("sorting_result");
 
     if (sortingResult) {
@@ -40,6 +41,7 @@ function WelcomeContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           transcript: transcript ? JSON.parse(transcript) : null,
+          targetedQuestions: targetedQuestions ? JSON.parse(targetedQuestions) : null,
           sortingResult: JSON.parse(sortingResult),
           username: user,
         }),
@@ -47,8 +49,9 @@ function WelcomeContent() {
         // Non-critical — digest is a bonus, not required
       });
 
-      // Clean up transcript from sessionStorage
+      // Clean up session data
       sessionStorage.removeItem("interview_transcript");
+      sessionStorage.removeItem("targeted_questions");
     }
   }, [user]);
 

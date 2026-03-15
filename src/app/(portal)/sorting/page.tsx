@@ -7,7 +7,7 @@ import { GlitchText } from "@/components/effects/glitch-text";
 import { InterviewTerminal } from "@/components/sorting/interview-terminal";
 import { TargetedQuestions } from "@/components/sorting/targeted-questions";
 import { calculateRelationshipResult } from "@/lib/sorting/engine";
-import { RELATIONSHIP_CONFIGS } from "@/lib/sorting/relationships";
+import { RELATIONSHIP_CONFIGS, TARGETED_QUESTIONS } from "@/lib/sorting/relationships";
 import { getResident } from "@/lib/resident";
 import type { ResidentData } from "@/lib/resident";
 import type { RelationshipType } from "@/lib/sorting/interview-prompt";
@@ -54,6 +54,22 @@ export default function SortingPage() {
   ) => {
     if (!relationshipType) return;
     setPhase("processing");
+
+    // Build readable Q&A log for the visitor digest
+    const questions = TARGETED_QUESTIONS[relationshipType];
+    const qaLog = questions.map((q) => {
+      const selectedScores = answers[q.id];
+      const selectedAnswer = selectedScores
+        ? q.answers.find(
+            (a) => JSON.stringify(a.scores) === JSON.stringify(selectedScores)
+          )
+        : null;
+      return {
+        question: q.prompt,
+        answer: selectedAnswer?.text || "no answer",
+      };
+    });
+    sessionStorage.setItem("targeted_questions", JSON.stringify(qaLog));
 
     const result = calculateRelationshipResult(relationshipType, answers);
     sessionStorage.setItem("sorting_result", JSON.stringify(result));

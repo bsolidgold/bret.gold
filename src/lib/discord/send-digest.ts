@@ -5,6 +5,11 @@ type TranscriptMessage = {
   content: string;
 };
 
+type QuestionAnswer = {
+  question: string;
+  answer: string;
+};
+
 type DigestPayload = {
   username: string;
   relationshipType: string;
@@ -13,6 +18,8 @@ type DigestPayload = {
   autoApprovedFloorRoles: string[];
   gatewayFloorRoles: string[];
   transcript: TranscriptMessage[] | null;
+  targetedQuestions: QuestionAnswer[] | null;
+  summary: string | null;
 };
 
 const FLOOR_NAMES: Record<string, string> = {
@@ -101,12 +108,21 @@ export async function sendVisitorDigest(payload: DigestPayload) {
       value: payload.archetype,
       inline: true,
     },
-    {
-      name: "Access Granted",
-      value: grantedFloors || "*none*",
-      inline: false,
-    },
   ];
+
+  if (payload.summary) {
+    fields.push({
+      name: "The Elevator's Read",
+      value: payload.summary,
+      inline: false,
+    });
+  }
+
+  fields.push({
+    name: "Access Granted",
+    value: grantedFloors || "*none*",
+    inline: false,
+  });
 
   if (pendingFloors) {
     fields.push({
@@ -148,8 +164,8 @@ export async function sendVisitorDigest(payload: DigestPayload) {
     // Discord messages are limited to 2000 chars
     const transcriptContent =
       fullTranscript.length > 1850
-        ? `**Interview Transcript:**\n\`\`\`\n${fullTranscript.slice(0, 1800)}\n...(truncated)\n\`\`\``
-        : `**Interview Transcript:**\n\`\`\`\n${fullTranscript}\n\`\`\``;
+        ? `**Elevator Interview:**\n\`\`\`\n${fullTranscript.slice(0, 1800)}\n...(truncated)\n\`\`\``
+        : `**Elevator Interview:**\n\`\`\`\n${fullTranscript}\n\`\`\``;
 
     await fetch(`${DISCORD_API}/channels/${dmChannel.id}/messages`, {
       method: "POST",
@@ -158,6 +174,27 @@ export async function sendVisitorDigest(payload: DigestPayload) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ content: transcriptContent }),
+    });
+  }
+
+  // Send the targeted questions as a follow-up message
+  if (payload.targetedQuestions && payload.targetedQuestions.length > 0) {
+    const qaLines = payload.targetedQuestions
+      .map((qa) => `Q: ${qa.question.replace(/\n/g, " ")}\nA: ${qa.answer}`)
+      .join("\n\n");
+
+    const qaContent =
+      qaLines.length > 1850
+        ? `**Sorting Questions:**\n\`\`\`\n${qaLines.slice(0, 1800)}\n...(truncated)\n\`\`\``
+        : `**Sorting Questions:**\n\`\`\`\n${qaLines}\n\`\`\``;
+
+    await fetch(`${DISCORD_API}/channels/${dmChannel.id}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content: qaContent }),
     });
   }
 }
