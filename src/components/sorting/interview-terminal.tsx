@@ -156,6 +156,9 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
         </>
       );
     }
+    if (isQuestion) {
+      return <span className="font-bold text-green-glow">{text}</span>;
+    }
     return <span className="text-green-glow/70">{text}</span>;
   };
 
