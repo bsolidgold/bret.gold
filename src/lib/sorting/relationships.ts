@@ -15,46 +15,51 @@ export type RelationshipConfig = {
 export const RELATIONSHIP_CONFIGS: Record<RelationshipType, RelationshipConfig> =
   {
     "inner-circle": {
+      // Lobby, Gallery, Dojo + Living Room auto-approved = 4
       type: "inner-circle",
       label: "INNER CIRCLE",
       description: "the building knows your name.",
-      autoOpenFloors: [0],
+      autoOpenFloors: [0, 11, 3],
       autoGatedFloors: [1],
       requestableFloors: [4, 6, 10, 12, 7],
       skipQuestions: false,
     },
     "bjj-friend": {
+      // Lobby, Dojo, Gallery + Gym auto-approved = 4
       type: "bjj-friend",
       label: "THE MAT",
       description: "you've bled on the same canvas.",
-      autoOpenFloors: [0, 3],
-      autoGatedFloors: [],
-      requestableFloors: [10, 1, 12],
+      autoOpenFloors: [0, 3, 11],
+      autoGatedFloors: [10],
+      requestableFloors: [1, 12],
       skipQuestions: false,
     },
     "recovery-friend": {
+      // Lobby + Hollow auto-approved, Chapel auto-approved = 3
       type: "recovery-friend",
       label: "THE HOLLOW",
       description: "you walked through something together.",
       autoOpenFloors: [0],
-      autoGatedFloors: [2],
-      requestableFloors: [1, 12],
+      autoGatedFloors: [2, 12],
+      requestableFloors: [1],
       skipQuestions: false,
     },
     "work-colleague": {
+      // Lobby, Terminal, Front Desk + Office auto-approved = 4
       type: "work-colleague",
       label: "THE OFFICE",
       description: "you built something in the same room.",
-      autoOpenFloors: [0, 5],
+      autoOpenFloors: [0, 5, 9],
       autoGatedFloors: [4],
       requestableFloors: [6, 10],
       skipQuestions: false,
     },
     "old-acquaintance": {
+      // Lobby, New Wing, Gallery = 3
       type: "old-acquaintance",
       label: "THE OLD WING",
       description: "the building remembers you. faintly.",
-      autoOpenFloors: [0, 8],
+      autoOpenFloors: [0, 8, 11],
       autoGatedFloors: [],
       requestableFloors: [1, 12],
       skipQuestions: false,
@@ -70,15 +75,17 @@ export const RELATIONSHIP_CONFIGS: Record<RelationshipType, RelationshipConfig> 
       fixedArchetype: "ghost",
     },
     fan: {
+      // Lobby, New Wing, Gallery, Dojo = 4
       type: "fan",
       label: "THE GALLERY",
       description: "you followed the signal here.",
-      autoOpenFloors: [0, 8],
+      autoOpenFloors: [0, 8, 11, 3],
       autoGatedFloors: [],
-      requestableFloors: [3, 10, 12],
+      requestableFloors: [10, 12],
       skipQuestions: false,
     },
     wanderer: {
+      // Lobby, New Wing = 2 (strangers earn their way)
       type: "wanderer",
       label: "THE NEW WING",
       description: "you don't know what you're looking for yet.",
@@ -88,6 +95,7 @@ export const RELATIONSHIP_CONFIGS: Record<RelationshipType, RelationshipConfig> 
       skipQuestions: false,
     },
     recruiter: {
+      // Front Desk only = 1
       type: "recruiter",
       label: "THE FRONT DESK",
       description: "leave your card.",
@@ -98,15 +106,17 @@ export const RELATIONSHIP_CONFIGS: Record<RelationshipType, RelationshipConfig> 
       fixedArchetype: "operator",
     },
     business: {
+      // Lobby, Front Desk, Terminal = 3
       type: "business",
       label: "THE FRONT DESK",
       description: "the building is listening.",
-      autoOpenFloors: [0, 9],
+      autoOpenFloors: [0, 9, 5],
       autoGatedFloors: [],
       requestableFloors: [4],
       skipQuestions: false,
     },
     "bjj-curious": {
+      // Lobby, New Wing, Dojo = 3
       type: "bjj-curious",
       label: "THE DOJO",
       description: "the mat is waiting.",
