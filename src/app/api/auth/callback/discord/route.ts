@@ -4,7 +4,9 @@ const DISCORD_API = "https://discord.com/api/v10";
 
 type SortingPayload = {
   archetype: string;
+  relationshipType?: string;
   primaryFloorRoles: string[];
+  autoApprovedFloorRoles?: string[];
   gatewayFloorRoles: string[];
 };
 
@@ -66,10 +68,10 @@ export async function GET(request: Request) {
     const guildId = process.env.DISCORD_GUILD_ID!;
     const botToken = process.env.DISCORD_BOT_TOKEN!;
 
-    // Determine which roles to assign immediately (open floors + new-arrival + archetype)
+    // Determine which roles to assign immediately
     const rolesToAssign: string[] = [];
 
-    // We need to fetch guild roles to map names to IDs
+    // Fetch guild roles to map names to IDs
     const guildRolesRes = await fetch(`${DISCORD_API}/guilds/${guildId}/roles`, {
       headers: { Authorization: `Bot ${botToken}` },
     });
@@ -83,9 +85,12 @@ export async function GET(request: Request) {
     const newArrivalId = roleMap.get("new-arrival");
     if (newArrivalId) rolesToAssign.push(newArrivalId);
 
-    // Always assign floor-8-new-wing (all arrivals)
-    const newWingId = roleMap.get("floor-8-new-wing");
-    if (newWingId) rolesToAssign.push(newWingId);
+    // Always assign floor-8-new-wing (all arrivals) — unless ex-partner
+    const isExPartner = sorting?.relationshipType === "ex-partner";
+    if (!isExPartner) {
+      const newWingId = roleMap.get("floor-8-new-wing");
+      if (newWingId) rolesToAssign.push(newWingId);
+    }
 
     // Assign archetype role
     if (sorting?.archetype) {
@@ -93,9 +98,23 @@ export async function GET(request: Request) {
       if (archetypeId) rolesToAssign.push(archetypeId);
     }
 
+    // Assign relationship type role (if it exists as a Discord role)
+    if (sorting?.relationshipType) {
+      const relRoleId = roleMap.get(sorting.relationshipType);
+      if (relRoleId) rolesToAssign.push(relRoleId);
+    }
+
     // Assign open floor roles from sorting result
     if (sorting?.primaryFloorRoles) {
       for (const roleName of sorting.primaryFloorRoles) {
+        const roleId = roleMap.get(roleName);
+        if (roleId) rolesToAssign.push(roleId);
+      }
+    }
+
+    // Assign auto-approved gated floor roles immediately
+    if (sorting?.autoApprovedFloorRoles) {
+      for (const roleName of sorting.autoApprovedFloorRoles) {
         const roleId = roleMap.get(roleName);
         if (roleId) rolesToAssign.push(roleId);
       }
@@ -167,6 +186,7 @@ export async function GET(request: Request) {
               userId: user.id,
               username: user.username,
               archetype: sorting.archetype,
+              relationshipType: sorting.relationshipType || "unknown",
               floorRoles: newGatewayRoles,
               secret: process.env.DISCORD_BOT_TOKEN,
             }),
@@ -182,7 +202,11 @@ export async function GET(request: Request) {
       discordId: user.id,
       username: user.username,
       archetype: sorting?.archetype || "",
-      primaryFloorRoles: sorting?.primaryFloorRoles || [],
+      relationshipType: sorting?.relationshipType || "",
+      primaryFloorRoles: [
+        ...(sorting?.primaryFloorRoles || []),
+        ...(sorting?.autoApprovedFloorRoles || []),
+      ],
       gatewayFloorRoles: sorting?.gatewayFloorRoles || [],
       joinedAt: new Date().toISOString(),
     };

@@ -97,7 +97,7 @@ export default function EnterPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 5, duration: 2 }}
             >
-              7 questions. The building decides.
+              step inside. the elevator will decide.
             </motion.p>
           </motion.div>
         )}

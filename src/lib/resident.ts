@@ -4,6 +4,7 @@ export type ResidentData = {
   discordId: string;
   username: string;
   archetype: string;
+  relationshipType?: string;
   primaryFloorRoles: string[];
   gatewayFloorRoles: string[];
   joinedAt: string;

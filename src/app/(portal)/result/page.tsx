@@ -1,15 +1,24 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
 import { GlitchText } from "@/components/effects/glitch-text";
-import type { SortingResult } from "@/lib/sorting/engine";
+import type { RelationshipResult } from "@/lib/sorting/engine";
 import { FLOORS } from "@/lib/sorting/questions";
+import { RELATIONSHIP_CONFIGS } from "@/lib/sorting/relationships";
+
+function floorFromRole(roleName: string) {
+  const match = roleName.match(/^floor-(\d+|b)-/i);
+  if (!match) return null;
+  const num = match[1].toLowerCase() === "b" ? "B" : parseInt(match[1]);
+  return FLOORS.find(
+    (f) => String(f.number).toLowerCase() === String(num).toLowerCase()
+  );
+}
 
 export default function ResultPage() {
-  const [result, setResult] = useState<SortingResult | null>(null);
-  const [hollowRequested, setHollowRequested] = useState(false);
+  const [result, setResult] = useState<RelationshipResult | null>(null);
   const [phase, setPhase] = useState<
     "elevator" | "archetype" | "floors" | "complete"
   >("elevator");
@@ -36,9 +45,7 @@ export default function ResultPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-void">
         <div className="text-center">
-          <p className="text-sm text-foreground/40">
-            No sorting data found.
-          </p>
+          <p className="text-sm text-foreground/40">No sorting data found.</p>
           <a
             href="/enter"
             className="mt-4 inline-block text-sm text-gold/50 transition-colors hover:text-gold"
@@ -50,11 +57,37 @@ export default function ResultPage() {
     );
   }
 
-  // Get the primary floor number for the elevator display
-  const primaryFloor =
-    result.primaryFloors[0]?.number ??
-    FLOORS.find((f) => f.category === result.ranked[0])?.number ??
-    8;
+  const config = RELATIONSHIP_CONFIGS[result.relationshipType];
+  const isExPartner = result.relationshipType === "ex-partner";
+  const isRecruiter = result.relationshipType === "recruiter";
+
+  // Resolve floor data from role names
+  const primaryFloors = result.primaryFloorRoles
+    .map(floorFromRole)
+    .filter(Boolean);
+  const autoApprovedFloors = result.autoApprovedFloorRoles
+    .map(floorFromRole)
+    .filter(Boolean);
+  const gatewayFloors = result.gatewayFloorRoles
+    .map(floorFromRole)
+    .filter(Boolean);
+
+  // Combined granted floors (open + auto-approved gated)
+  const grantedFloors = [...primaryFloors, ...autoApprovedFloors];
+
+  // Get the primary floor number for elevator display
+  const primaryFloor = grantedFloors[0]?.number ?? 8;
+
+  // Build the sorting payload for JOIN button
+  const buildSortingPayload = () => {
+    return JSON.stringify({
+      archetype: result.archetype.name,
+      relationshipType: result.relationshipType,
+      primaryFloorRoles: result.primaryFloorRoles,
+      autoApprovedFloorRoles: result.autoApprovedFloorRoles,
+      gatewayFloorRoles: result.gatewayFloorRoles,
+    });
+  };
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-void px-4 py-16 sm:px-8">
@@ -72,7 +105,6 @@ export default function ResultPage() {
             <p className="text-xs tracking-[0.5em] text-foreground/30">
               THE ELEVATOR IS MOVING
             </p>
-            {/* Floor counter */}
             <motion.div
               className="flex h-24 w-24 items-center justify-center border border-gold/20"
               animate={{
@@ -110,9 +142,10 @@ export default function ResultPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
           >
-            <p className="text-xs tracking-[0.3em] text-foreground/30">
-              THE BUILDING HAS DECIDED
+            <p className="text-xs tracking-[0.3em] text-foreground/20">
+              {config.label}
             </p>
+
             <GlitchText
               text={result.archetype.name.toUpperCase()}
               className="text-4xl font-bold tracking-wider text-gold sm:text-5xl"
@@ -127,6 +160,15 @@ export default function ResultPage() {
               delay={800}
               as="p"
             />
+
+            <motion.p
+              className="text-xs text-foreground/25"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+            >
+              {config.description}
+            </motion.p>
           </motion.div>
         )}
 
@@ -140,6 +182,9 @@ export default function ResultPage() {
             transition={{ duration: 1 }}
           >
             <div className="flex flex-col items-center gap-2">
+              <p className="text-[10px] tracking-[0.3em] text-foreground/20">
+                {config.label}
+              </p>
               <GlitchText
                 text={result.archetype.name.toUpperCase()}
                 className="text-3xl font-bold tracking-wider text-gold sm:text-4xl"
@@ -152,146 +197,114 @@ export default function ResultPage() {
               </p>
             </div>
 
-            {/* Floor list */}
-            <div className="flex w-full flex-col gap-4">
-              {/* Auto-granted floors */}
-              {result.primaryFloors.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <p className="text-xs tracking-[0.2em] text-gold/40">
-                    ACCESS GRANTED
-                  </p>
-                  {result.primaryFloors.map((floor, i) => (
-                    <motion.div
-                      key={floor.number}
-                      className="flex items-center gap-3 border border-gold/20 px-4 py-3 sm:gap-4 sm:px-6"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.3 }}
-                      style={{
-                        boxShadow:
-                          "0 0 15px rgba(201, 168, 76, 0.05)",
-                      }}
-                    >
-                      <span className="text-lg font-bold text-gold/60">
-                        {floor.number}
-                      </span>
-                      <span className="text-sm text-foreground/60">
-                        {floor.name}
-                      </span>
-                    </motion.div>
-                  ))}
-                  {/* Always include Floor 0 and Floor 8 */}
-                  <motion.div
-                    className="flex items-center gap-3 border border-foreground/10 px-4 py-3 sm:gap-4 sm:px-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      delay: result.primaryFloors.length * 0.3,
-                    }}
-                  >
-                    <span className="text-lg font-bold text-foreground/30">
-                      0
-                    </span>
-                    <span className="text-sm text-foreground/40">
-                      THE LOBBY
-                    </span>
-                    <span className="ml-auto text-xs text-foreground/25">
-                      always open
-                    </span>
-                  </motion.div>
-                  <motion.div
-                    className="flex items-center gap-3 border border-foreground/10 px-4 py-3 sm:gap-4 sm:px-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      delay:
-                        (result.primaryFloors.length + 1) * 0.3,
-                    }}
-                  >
-                    <span className="text-lg font-bold text-foreground/30">
-                      8
-                    </span>
-                    <span className="text-sm text-foreground/40">
-                      THE NEW WING
-                    </span>
-                    <span className="ml-auto text-xs text-foreground/25">
-                      all arrivals
-                    </span>
-                  </motion.div>
-                </div>
-              )}
+            {/* Ex-partner: special result */}
+            {isExPartner && (
+              <motion.div
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <p className="max-w-sm text-center text-sm leading-relaxed text-foreground/30">
+                  {config.description}
+                </p>
+                <p className="text-xs text-foreground/20">
+                  a quiet channel. just for you.
+                </p>
+              </motion.div>
+            )}
 
-              {/* Gated floors (pending approval) */}
-              {result.gatewayFloors.length > 0 && (
-                <div className="mt-4 flex flex-col gap-2">
-                  <p className="text-xs tracking-[0.2em] text-foreground/30">
-                    AWAITING APPROVAL
-                  </p>
-                  {result.gatewayFloors.map((floor, i) => (
-                    <motion.div
-                      key={floor.number}
-                      className="flex items-center gap-3 border border-foreground/10 px-4 py-3 opacity-50 sm:gap-4 sm:px-6"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 0.5, x: 0 }}
-                      transition={{
-                        delay:
-                          (result.primaryFloors.length + 2) * 0.3 +
-                          i * 0.2,
-                      }}
-                    >
-                      <span className="text-lg font-bold text-foreground/30">
-                        {floor.number}
-                      </span>
-                      <span className="text-sm text-foreground/40">
-                        {floor.name}
-                      </span>
-                      <span className="ml-auto text-xs text-gold/30">
-                        pending
-                      </span>
-                    </motion.div>
-                  ))}
+            {/* Recruiter: special result */}
+            {isRecruiter && (
+              <motion.div
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="flex items-center gap-3 border border-gold/20 px-6 py-3">
+                  <span className="text-lg font-bold text-gold/60">9</span>
+                  <span className="text-sm text-foreground/60">
+                    THE FRONT DESK
+                  </span>
                 </div>
-              )}
+                <p className="text-xs text-foreground/20">
+                  {config.description}
+                </p>
+              </motion.div>
+            )}
 
-              {/* The Hollow — appears if recovery is in top 3 */}
-              {result.ranked.indexOf("recovery") < 3 &&
-                !result.gatewayFloors.some((f) => f.number === 2) && (
-                <motion.div
-                  className="mt-6 flex flex-col items-center gap-3"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: (result.primaryFloors.length + result.gatewayFloors.length + 3) * 0.3 }}
-                >
-                  <div className="h-px w-16 bg-foreground/10" />
-                  {!hollowRequested ? (
-                    <button
-                      onClick={() => setHollowRequested(true)}
-                      className="group flex flex-col items-center gap-2 transition-all duration-500"
-                    >
-                      <p className="text-xs text-foreground/20 transition-colors group-hover:text-foreground/40">
-                        there&apos;s a second floor. if you know what the hollow is, knock.
-                      </p>
-                    </button>
-                  ) : (
-                    <motion.div
-                      className="flex items-center gap-3 border border-foreground/10 px-4 py-3 sm:gap-4 sm:px-6 w-full"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 0.5, x: 0 }}
-                    >
-                      <span className="text-lg font-bold text-foreground/30">
-                        2
-                      </span>
-                      <span className="text-sm text-foreground/40">
-                        THE HOLLOW
-                      </span>
-                      <span className="ml-auto text-xs text-gold/30">
-                        requested
-                      </span>
-                    </motion.div>
-                  )}
-                </motion.div>
-              )}
-            </div>
+            {/* Normal flow: floor list */}
+            {!isExPartner && !isRecruiter && (
+              <div className="flex w-full flex-col gap-4">
+                {/* Granted floors (open + auto-approved gated) */}
+                {grantedFloors.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs tracking-[0.2em] text-gold/40">
+                      ACCESS GRANTED
+                    </p>
+                    {grantedFloors.map((floor, i) =>
+                      floor ? (
+                        <motion.div
+                          key={floor.number}
+                          className="flex items-center gap-3 border border-gold/20 px-4 py-3 sm:gap-4 sm:px-6"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.2 }}
+                          style={{
+                            boxShadow: "0 0 15px rgba(201, 168, 76, 0.05)",
+                          }}
+                        >
+                          <span className="text-lg font-bold text-gold/60">
+                            {floor.number}
+                          </span>
+                          <span className="text-sm text-foreground/60">
+                            {floor.name}
+                          </span>
+                          {autoApprovedFloors.includes(floor) && (
+                            <span className="ml-auto text-[10px] text-gold/30">
+                              auto-approved
+                            </span>
+                          )}
+                        </motion.div>
+                      ) : null
+                    )}
+                  </div>
+                )}
+
+                {/* Awaiting approval floors */}
+                {gatewayFloors.length > 0 && (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <p className="text-xs tracking-[0.2em] text-foreground/30">
+                      AWAITING APPROVAL
+                    </p>
+                    {gatewayFloors.map((floor, i) =>
+                      floor ? (
+                        <motion.div
+                          key={floor.number}
+                          className="flex items-center gap-3 border border-foreground/10 px-4 py-3 opacity-50 sm:gap-4 sm:px-6"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 0.5, x: 0 }}
+                          transition={{
+                            delay: grantedFloors.length * 0.2 + i * 0.15,
+                          }}
+                        >
+                          <span className="text-lg font-bold text-foreground/30">
+                            {floor.number}
+                          </span>
+                          <span className="text-sm text-foreground/40">
+                            {floor.name}
+                          </span>
+                          <span className="ml-auto text-xs text-gold/30">
+                            pending
+                          </span>
+                        </motion.div>
+                      ) : null
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Join button (appears in "complete" phase) */}
             {phase === "complete" && (
@@ -304,41 +317,7 @@ export default function ResultPage() {
                 <button
                   className="group relative"
                   onClick={() => {
-                    // Build sorting payload for OAuth state
-                    const floorToRole = (num: number | "B") => {
-                      const map: Record<string, string> = {
-                        "2": "floor-2-hollow",
-                        "3": "floor-3-dojo",
-                        "5": "floor-5-terminal",
-                        "8": "floor-8-new-wing",
-                        "9": "floor-9-front-desk",
-                        "11": "floor-11-gallery",
-                        "1": "floor-1-living-room",
-                        "4": "floor-4-office",
-                        "6": "floor-6-study",
-                        "10": "floor-10-gym",
-                        "12": "floor-12-chapel",
-                      };
-                      return map[String(num)];
-                    };
-
-                    const gatewayRoles = result.gatewayFloors
-                      .map((f) => floorToRole(f.number))
-                      .filter(Boolean);
-
-                    // Add The Hollow if requested
-                    if (hollowRequested) {
-                      gatewayRoles.push("floor-2-hollow");
-                    }
-
-                    const sorting = JSON.stringify({
-                      archetype: result.archetype.name,
-                      primaryFloorRoles: result.primaryFloors
-                        .map((f) => floorToRole(f.number))
-                        .filter(Boolean),
-                      gatewayFloorRoles: gatewayRoles,
-                    });
-
+                    const sorting = buildSortingPayload();
                     window.location.href = `/api/auth/discord?sorting=${encodeURIComponent(sorting)}`;
                   }}
                 >
