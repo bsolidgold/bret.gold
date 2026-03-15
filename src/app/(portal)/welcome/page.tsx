@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { GlitchText } from "@/components/effects/glitch-text";
 import { CipherReveal } from "@/components/effects/cipher-reveal";
@@ -11,6 +11,7 @@ function WelcomeContent() {
   const searchParams = useSearchParams();
   const user = searchParams.get("user") || "stranger";
   const archetype = searchParams.get("archetype") || "";
+  const digestSent = useRef(false);
 
   // Store resident data in localStorage for returning user detection
   useEffect(() => {
@@ -24,6 +25,32 @@ function WelcomeContent() {
       }
     }
   }, [searchParams]);
+
+  // Send visitor digest DM to Bret (fire-and-forget)
+  useEffect(() => {
+    if (digestSent.current) return;
+    digestSent.current = true;
+
+    const transcript = sessionStorage.getItem("interview_transcript");
+    const sortingResult = sessionStorage.getItem("sorting_result");
+
+    if (sortingResult) {
+      fetch("/api/visitor-digest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: transcript ? JSON.parse(transcript) : null,
+          sortingResult: JSON.parse(sortingResult),
+          username: user,
+        }),
+      }).catch(() => {
+        // Non-critical — digest is a bonus, not required
+      });
+
+      // Clean up transcript from sessionStorage
+      sessionStorage.removeItem("interview_transcript");
+    }
+  }, [user]);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-void px-8">

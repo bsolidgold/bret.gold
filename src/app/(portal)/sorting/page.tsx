@@ -28,12 +28,15 @@ export default function SortingPage() {
   }, []);
 
   // Handle AI classification
-  const handleClassified = (type: RelationshipType) => {
+  const handleClassified = (type: RelationshipType, transcript: { role: string; content: string }[]) => {
     setRelationshipType(type);
+
+    // Store interview transcript for visitor digest DM
+    sessionStorage.setItem("interview_transcript", JSON.stringify(transcript));
 
     const config = RELATIONSHIP_CONFIGS[type];
     if (config.skipQuestions) {
-      // Ex-partner and recruiter skip questions entirely
+      // Ex-partner, recruiter, and admirer skip questions entirely
       setPhase("processing");
       const result = calculateRelationshipResult(type, {});
       sessionStorage.setItem("sorting_result", JSON.stringify(result));

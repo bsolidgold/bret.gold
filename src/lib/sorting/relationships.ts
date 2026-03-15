@@ -74,6 +74,17 @@ export const RELATIONSHIP_CONFIGS: Record<RelationshipType, RelationshipConfig> 
       skipQuestions: true,
       fixedArchetype: "ghost",
     },
+    admirer: {
+      // Lobby + New Wing = 2 (minimal access, Bret gets notified)
+      type: "admirer",
+      label: "THE QUIET FLOOR",
+      description: "the building heard you. some signals travel further than others.",
+      autoOpenFloors: [0, 8],
+      autoGatedFloors: [],
+      requestableFloors: [],
+      skipQuestions: true,
+      fixedArchetype: "signal",
+    },
     fan: {
       // Lobby, New Wing, Gallery, Dojo = 4
       type: "fan",
@@ -789,5 +800,6 @@ export const TARGETED_QUESTIONS: Record<RelationshipType, Question[]> = {
 
   // These skip questions — empty arrays
   "ex-partner": [],
+  admirer: [],
   recruiter: [],
 };

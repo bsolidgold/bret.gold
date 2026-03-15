@@ -10,7 +10,7 @@ type Message = {
 };
 
 interface InterviewTerminalProps {
-  onClassified: (type: RelationshipType) => void;
+  onClassified: (type: RelationshipType, transcript: Message[]) => void;
 }
 
 export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
@@ -23,6 +23,12 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
+  const messagesRef = useRef<Message[]>([]);
+
+  // Keep messagesRef in sync for closure access
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -60,8 +66,10 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
           if (classification) {
             // Classified! Trigger transition after a beat
             setClassified(true);
+            // Build full transcript (use ref for latest messages + this final assistant message)
+            const fullTranscript = [...messagesRef.current, { role: "assistant" as const, content: text }];
             setTimeout(() => {
-              onClassified(classification as RelationshipType);
+              onClassified(classification as RelationshipType, fullTranscript);
             }, 1500);
           } else {
             setIsLoading(false);

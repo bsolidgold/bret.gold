@@ -11,6 +11,7 @@ type Project = {
   desc: string;
   tags: string[];
   link?: string;
+  links?: { label: string; url: string }[];
   status: "live" | "building" | "archived";
 };
 
@@ -33,6 +34,17 @@ const PROJECTS: Project[] = [
     tags: ["next.js", "typescript", "supabase"],
     link: "https://openmat.app",
     status: "building",
+  },
+  {
+    name: "BJJPROBLEMS",
+    desc: "jiu-jitsu humor and culture. memes, reels, and the things no one warns you about before your first class.",
+    tags: ["social media", "jiu-jitsu", "content"],
+    links: [
+      { label: "instagram", url: "https://instagram.com/bjjproblems" },
+      { label: "facebook", url: "https://facebook.com/bjjproblems" },
+      { label: "website", url: "https://bjjproblems.com" },
+    ],
+    status: "live",
   },
 ];
 
@@ -132,7 +144,7 @@ export default function WorkPage() {
                             </span>
                           ))}
                         </div>
-                        {project.link && (
+                        {project.link && !project.links && (
                           <a
                             href={project.link}
                             target="_blank"
@@ -141,6 +153,21 @@ export default function WorkPage() {
                           >
                             view project &rarr;
                           </a>
+                        )}
+                        {project.links && (
+                          <div className="mt-3 flex gap-4">
+                            {project.links.map((l) => (
+                              <a
+                                key={l.label}
+                                href={l.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-gold/40 transition-colors hover:text-gold/70"
+                              >
+                                {l.label} &rarr;
+                              </a>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </motion.div>

@@ -48,6 +48,10 @@ const ARCHETYPES: Record<string, Archetype> = {
     name: "The Monk",
     description: "You sit with the questions. Not all of them have answers. That's the point.",
   },
+  signal: {
+    name: "The Signal",
+    description: "You came here looking for someone. The building noticed.",
+  },
 };
 
 function getArchetype(topTwo: Category[]): Archetype {

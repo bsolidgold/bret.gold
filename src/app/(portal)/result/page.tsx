@@ -60,6 +60,7 @@ export default function ResultPage() {
   const config = RELATIONSHIP_CONFIGS[result.relationshipType];
   const isExPartner = result.relationshipType === "ex-partner";
   const isRecruiter = result.relationshipType === "recruiter";
+  const isAdmirer = result.relationshipType === "admirer";
 
   // Resolve floor data from role names
   const primaryFloors = result.primaryFloorRoles
@@ -245,8 +246,25 @@ export default function ResultPage() {
               </motion.div>
             )}
 
+            {/* Admirer: special result */}
+            {isAdmirer && (
+              <motion.div
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <p className="max-w-sm text-center text-sm leading-relaxed text-foreground/30">
+                  {config.description}
+                </p>
+                <p className="text-xs text-foreground/20">
+                  the building will let him know you were here.
+                </p>
+              </motion.div>
+            )}
+
             {/* Normal flow: floor list */}
-            {!isExPartner && !isRecruiter && (
+            {!isExPartner && !isRecruiter && !isAdmirer && (
               <div className="flex w-full flex-col gap-4">
                 {/* Granted floors (open + auto-approved gated) */}
                 {grantedFloors.length > 0 && (
