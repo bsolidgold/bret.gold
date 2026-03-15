@@ -140,7 +140,7 @@ export default function SortingPage() {
             </p>
 
             <motion.div
-              className="flex h-20 w-20 items-center justify-center border border-gold/20"
+              className="flex h-20 items-center justify-center border border-gold/20 px-8"
               animate={{
                 borderColor: [
                   "rgba(201, 168, 76, 0.2)",

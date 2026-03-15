@@ -132,6 +132,25 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
     }
   };
 
+  // Render assistant messages with the question line (last line ending with ?) in bold
+  const renderAssistantMessage = (text: string) => {
+    const lines = text.split("\n");
+    const lastLine = lines[lines.length - 1];
+    const isQuestion = lastLine.trim().endsWith("?");
+
+    if (lines.length > 1 && isQuestion) {
+      const atmosphere = lines.slice(0, -1).join("\n");
+      return (
+        <>
+          <span className="text-green-glow/60">{atmosphere}</span>
+          {"\n"}
+          <span className="font-bold text-green-glow">{lastLine}</span>
+        </>
+      );
+    }
+    return <span className="text-green-glow/70">{text}</span>;
+  };
+
   return (
     <div className="flex w-full max-w-xl flex-col">
       {/* Terminal header */}
@@ -151,9 +170,9 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
         {messages.map((msg, i) => (
           <div key={i} className="flex flex-col gap-1">
             {msg.role === "assistant" ? (
-              <p className="text-sm leading-relaxed text-green-glow/70">
-                {msg.content}
-              </p>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                {renderAssistantMessage(msg.content)}
+              </div>
             ) : (
               <p className="text-sm text-gold/70">
                 <span className="text-gold/30">{"> "}</span>
@@ -165,8 +184,8 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
 
         {/* Currently typing assistant message */}
         {isTyping && (
-          <p className="text-sm leading-relaxed text-green-glow/70">
-            {typingText}
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+            {renderAssistantMessage(typingText)}
             <motion.span
               className="text-green-glow"
               animate={{ opacity: [1, 1, 0, 0] }}

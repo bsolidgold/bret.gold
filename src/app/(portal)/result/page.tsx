@@ -72,8 +72,19 @@ export default function ResultPage() {
     .map(floorFromRole)
     .filter(Boolean);
 
-  // Combined granted floors (open + auto-approved gated)
-  const grantedFloors = [...primaryFloors, ...autoApprovedFloors];
+  // Sort helper: floors by number ascending (B = -1)
+  const sortFloors = (floors: (typeof FLOORS[number] | null | undefined)[]) =>
+    floors
+      .filter((f): f is typeof FLOORS[number] => f != null)
+      .sort((a, b) => {
+        const numA = a.number === "B" ? -1 : a.number;
+        const numB = b.number === "B" ? -1 : b.number;
+        return numA - numB;
+      });
+
+  // Combined granted floors (open + auto-approved gated), sorted
+  const grantedFloors = sortFloors([...primaryFloors, ...autoApprovedFloors]);
+  const sortedGatewayFloors = sortFloors(gatewayFloors);
 
   // Get the primary floor number for elevator display
   const primaryFloor = grantedFloors[0]?.number ?? 8;
@@ -142,7 +153,7 @@ export default function ResultPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
           >
-            <p className="text-xs tracking-[0.3em] text-foreground/20">
+            <p className="text-xs tracking-[0.3em] text-foreground/35">
               {config.label}
             </p>
 
@@ -162,7 +173,7 @@ export default function ResultPage() {
             />
 
             <motion.p
-              className="text-xs text-foreground/25"
+              className="text-xs text-foreground/40"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
@@ -182,7 +193,7 @@ export default function ResultPage() {
             transition={{ duration: 1 }}
           >
             <div className="flex flex-col items-center gap-2">
-              <p className="text-[10px] tracking-[0.3em] text-foreground/20">
+              <p className="text-[10px] tracking-[0.3em] text-foreground/35">
                 {config.label}
               </p>
               <GlitchText
@@ -192,7 +203,7 @@ export default function ResultPage() {
                 glitchInterval={4000}
                 glitchIntensity={0.2}
               />
-              <p className="text-xs text-foreground/30">
+              <p className="text-xs text-foreground/45">
                 {result.archetype.description}
               </p>
             </div>
@@ -273,12 +284,12 @@ export default function ResultPage() {
                 )}
 
                 {/* Awaiting approval floors */}
-                {gatewayFloors.length > 0 && (
+                {sortedGatewayFloors.length > 0 && (
                   <div className="mt-4 flex flex-col gap-2">
                     <p className="text-xs tracking-[0.2em] text-foreground/30">
                       AWAITING APPROVAL
                     </p>
-                    {gatewayFloors.map((floor, i) =>
+                    {sortedGatewayFloors.map((floor, i) =>
                       floor ? (
                         <motion.div
                           key={floor.number}
