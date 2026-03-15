@@ -85,13 +85,6 @@ export async function GET(request: Request) {
     const newArrivalId = roleMap.get("new-arrival");
     if (newArrivalId) rolesToAssign.push(newArrivalId);
 
-    // Always assign floor-8-new-wing (all arrivals) — unless ex-partner
-    const isExPartner = sorting?.relationshipType === "ex-partner";
-    if (!isExPartner) {
-      const newWingId = roleMap.get("floor-8-new-wing");
-      if (newWingId) rolesToAssign.push(newWingId);
-    }
-
     // Assign archetype role
     if (sorting?.archetype) {
       const archetypeId = roleMap.get(sorting.archetype);
