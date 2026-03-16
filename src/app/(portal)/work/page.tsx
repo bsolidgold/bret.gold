@@ -46,6 +46,16 @@ const PROJECTS: Project[] = [
     ],
     status: "live",
   },
+  {
+    name: "BJJDIGEST",
+    desc: "autonomous weekly digest of the bjj world. ai-researched, ai-written, ai-narrated, ai-rendered. every sunday: a video, a blog post, and zero human intervention.",
+    tags: ["ai", "jiu-jitsu", "automation", "open source"],
+    links: [
+      { label: "github", url: "https://github.com/openmatHQ/bjjDigest" },
+      { label: "blog", url: "https://bjjproblems.com/blogs/bjj-problems" },
+    ],
+    status: "live",
+  },
 ];
 
 function statusBadge(status: Project["status"]) {
