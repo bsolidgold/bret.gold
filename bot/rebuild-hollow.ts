@@ -32,7 +32,6 @@ const NEW_CHANNELS = [
   { name: "emdr", type: ChannelType.GuildText, topic: "Eye Movement Desensitization & Reprocessing — processing work." },
   { name: "parts-work", type: ChannelType.GuildText, topic: "Internal Family Systems — exiles, managers, firefighters. The parts that need to be heard." },
   { name: "dbt-skills", type: ChannelType.GuildText, topic: "Dialectical Behavior Therapy — distress tolerance, emotional regulation, skills practice." },
-  { name: "the-stable", type: ChannelType.GuildText, topic: "Equine therapy. The horses knew before you did." },
   { name: "the-stage", type: ChannelType.GuildText, topic: "Psychodrama. The scenes that needed to be replayed differently." },
   { name: "mind-body", type: ChannelType.GuildText, topic: "Mind-Body Bridging, somatic work, self-compassion, shame resilience." },
   // Forum for threads
