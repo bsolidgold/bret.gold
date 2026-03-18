@@ -263,7 +263,7 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
       </div>
 
       {/* Input area */}
-      <div className="flex items-center border border-t-0 border-green-glow/15 bg-void px-4 py-3">
+      <div className="flex items-center border border-t-0 border-gold/40 bg-void px-4 py-3">
         <span className="mr-2 font-mono text-sm text-gold/30">{"> "}</span>
         <input
           ref={inputRef}
@@ -282,8 +282,16 @@ export function InterviewTerminal({ onClassified }: InterviewTerminalProps) {
                 : "speak"
           }
           className="flex-1 bg-transparent font-mono text-sm text-gold/70 placeholder-foreground/15 outline-none"
+          autoFocus
           autoComplete="off"
         />
+        <button
+          onClick={sendMessage}
+          disabled={isLoading || isTyping || classified}
+          className="ml-2 shrink-0 border border-gold/30 bg-gold/[0.045] px-3 py-1 font-mono text-[10px] tracking-widest text-gold/50 transition-colors hover:bg-gold/12 hover:text-gold/80 disabled:opacity-22"
+        >
+          NEXT
+        </button>
       </div>
     </div>
   );
