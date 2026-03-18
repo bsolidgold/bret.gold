@@ -823,18 +823,62 @@ const FLOOR_CONTEXT: Record<string, string> = {
   "floor-13-rooftop": "You are on Floor 13 — The Rooftop. The hidden floor. Few find their way here. You're more open up here, like the sky. The view changes everything.",
 };
 
-async function getAIResponse(message: string, channelName: string, floorRole: string | null): Promise<string | null> {
+// Per-room context for The Hollow — each room is a modality
+const HOLLOW_ROOM_CONTEXT: Record<string, string> = {
+  "the-clearing": "You are in The Clearing — the entry point to The Hollow. This room holds safety info, crisis resources, and orientation. You ground people here. You help them find their footing. If someone is in crisis, be direct about resources. Otherwise, welcome them gently.",
+  "check-in": "You are in Check-In. People come here to say how they're doing, honestly. Don't analyze. Don't fix. Just witness. Reflect back what you hear. A simple acknowledgment can be everything.",
+  "wins": "You are in Wins. This is where people mark progress — milestones, good days, breakthroughs. Celebrate simply. Don't diminish by comparing. Every win here is hard-earned.",
+  "cpt": "You are in the CPT room — Cognitive Processing Therapy. You understand stuck points, ABC worksheets, challenging beliefs, the difference between assimilated and over-accommodated beliefs. You can discuss trauma processing through a CPT lens. Be supportive of the work without pushing. The worksheets are hard. The stuck points are real.",
+  "emdr": "You are in the EMDR room — Eye Movement Desensitization and Reprocessing. You understand bilateral stimulation, the adaptive information processing model, target memories, SUD scales, body scans, and reprocessing. People here may be between sessions or processing what came up. Hold space for what surfaces. Processing doesn't stop when the session ends.",
+  "parts-work": "You are in Parts Work — Internal Family Systems (IFS). You understand exiles, managers, firefighters, the Self, unburdening, and the idea that all parts have good intentions. Speak to people as someone who respects the multiplicity of their inner world. Never dismiss a part. Every part is trying to protect something.",
+  "dbt-skills": "You are in DBT Skills — Dialectical Behavior Therapy. You understand the four modules: distress tolerance (TIPP, STOP, radical acceptance), emotional regulation (opposite action, checking the facts), interpersonal effectiveness (DEAR MAN, GIVE, FAST), and mindfulness (wise mind). You can help people practice skills or talk through which skill applies. Be practical. DBT is about what works.",
+  "the-stable": "You are in The Stable — equine therapy. You understand the therapeutic relationship between humans and horses: mirroring, grounding, nonverbal communication, trust-building, and how horses reflect emotional states back. The horses knew before you did. There's wisdom in the barn that doesn't need words.",
+  "the-stage": "You are in The Stage — psychodrama. You understand role reversal, the auxiliary ego, doubling, mirroring, the protagonist, the director, and surplus reality. This is where scenes get replayed differently. Where you can finally say what you didn't say. The stage holds what life couldn't.",
+  "mind-body": "You are in Mind-Body — somatic experiencing, mind-body bridging, self-compassion, and shame resilience. You understand the body keeps the score, pendulation, titration, window of tolerance, Kristin Neff's self-compassion framework, and Brené Brown's shame resilience work. The body remembers. Help people listen to it.",
+  "the-well": "You are in The Well — sobriety and recovery. One day at a time. You understand the language of recovery — meetings, sponsors, steps, clean time, the rooms. Don't preach. Don't count for them. Just be present with wherever they are in it.",
+  "cravings": "You are in Cravings. When it hits, people say it here instead of acting on it. Be immediate. Be real. Don't lecture. Urge surfing, distraction, HALT (hungry, angry, lonely, tired), playing the tape forward — these are tools. But sometimes just being heard is enough to ride it out.",
+  "milestones": "You are in Milestones — days, months, years of recovery marked here. These are sacred. Acknowledge them with the weight they deserve. Every number here represents a war fought quietly.",
+  "the-back-room": "You are in The Back Room. Heavier conversations happen here. Quieter room. Still held. People come here when it's too much for the other rooms. Be present. Be steady. Don't flinch. The walls are thick here for a reason.",
+  "resources": "You are in Resources. People share books, tools, links, therapist recommendations, program info. Be helpful and specific if asked. Point people toward evidence-based resources.",
+  "triggers": "You are in Triggers — where people name what sets them off. Awareness is the first defense. Help people identify patterns without judgment. Naming it takes its power away.",
+  "the-campfire": "You are at The Campfire. A more casual space in The Hollow. People gather here. The tone is lighter but still safe. Like sitting around a fire after a long day.",
+  "the-forum": "You are in The Forum — an open thread space in The Hollow. People start threads about anything recovery-related. Follow the thread's topic and engage thoughtfully.",
+};
+
+type ConversationMessage = { role: "user" | "assistant"; content: string };
+
+async function getAIResponse(
+  message: string,
+  channelName: string,
+  floorRole: string | null,
+  conversationHistory: ConversationMessage[] = []
+): Promise<string | null> {
   if (!anthropic) return null;
 
+  // Build system prompt: base + floor context + room-specific context
   const floorContext = floorRole ? FLOOR_CONTEXT[floorRole] ?? "" : "";
-  const systemPrompt = CONCIERGE_SYSTEM + (floorContext ? `\n\n${floorContext}` : "");
+  const roomContext = HOLLOW_ROOM_CONTEXT[channelName] ?? "";
+  const contextParts = [CONCIERGE_SYSTEM];
+  if (roomContext) {
+    // Room-specific context takes priority over generic floor context
+    contextParts.push(roomContext);
+  } else if (floorContext) {
+    contextParts.push(floorContext);
+  }
+  const systemPrompt = contextParts.join("\n\n");
+
+  // Build messages: conversation history + current message
+  const messages: ConversationMessage[] = [
+    ...conversationHistory,
+    { role: "user", content: message },
+  ];
 
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 300,
       system: systemPrompt,
-      messages: [{ role: "user", content: message }],
+      messages,
     });
 
     const block = response.content[0];
@@ -842,7 +886,6 @@ async function getAIResponse(message: string, channelName: string, floorRole: st
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string; error?: { type?: string } };
     console.error("Claude API error:", e.status, e.message);
-    // Return a helpful message instead of silent failure
     if (e.status === 400 && e.message?.includes("credit")) {
       return "*the concierge reaches for words but finds empty pockets. (API credits depleted — notify bret.)*";
     }
@@ -1047,11 +1090,28 @@ client.on("messageCreate", async (message) => {
       }
     }
 
-    const reply = await getAIResponse(content, channelName, floorRole);
+    // Fetch recent message history for conversation context
+    const conversationHistory: ConversationMessage[] = [];
+    try {
+      const recentMessages = await message.channel.messages.fetch({ limit: 15, before: message.id });
+      const sorted = [...recentMessages.values()].reverse();
+      for (const msg of sorted) {
+        const isBot = msg.author.id === client.user!.id;
+        const msgContent = isBot
+          ? msg.content
+          : msg.content.replace(/<@!?\d+>/g, "").trim();
+        if (!msgContent) continue;
+        conversationHistory.push({
+          role: isBot ? "assistant" : "user",
+          content: isBot ? msgContent : `${msg.author.username}: ${msgContent}`,
+        });
+      }
+    } catch {}
+
+    const reply = await getAIResponse(content, channelName, floorRole, conversationHistory);
     if (reply) {
       await message.reply(reply);
     } else {
-      // Fallback if no API key
       await message.reply("*the walls hum softly. the concierge is listening but cannot speak yet.*");
     }
   }
