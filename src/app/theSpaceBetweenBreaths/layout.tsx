@@ -27,6 +27,15 @@ export default function BookLayout({
         .crt-tear {
           animation: none !important;
         }
+        body > .relative > div {
+          transform: none !important;
+          filter: none !important;
+          clip-path: none !important;
+          opacity: 1 !important;
+        }
+        body > .relative > .pointer-events-none {
+          display: none !important;
+        }
       `}</style>
       <div
         className={`${lora.className} min-h-screen`}
