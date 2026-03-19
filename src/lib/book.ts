@@ -37,7 +37,8 @@ export type ContentBlock =
   | { type: "paragraph"; text: string }
   | { type: "aside"; text: string }
   | { type: "section-break" }
-  | { type: "subheading"; text: string };
+  | { type: "subheading"; text: string }
+  | { type: "whiteboard"; items: string[] };
 
 export interface ParsedChapter {
   meta: ChapterMeta;
@@ -142,6 +143,57 @@ export function parseChapterContent(
         .replace(/^\*?\u00bb\s*/, "")
         .replace(/\s*\u00ab\*?$/, "");
       blocks.push({ type: "aside", text: cleaned });
+      continue;
+    }
+
+    // Whiteboard list: "Wake up. Get out of bed. Take a shower. Go outside."
+    if (
+      para.includes("Wake up") &&
+      para.includes("Get out of bed") &&
+      para.includes("Take a shower") &&
+      para.includes("Go outside")
+    ) {
+      const wakeIdx = para.indexOf("Wake up");
+      const checkBefore = para.lastIndexOf("\u2713", wakeIdx);
+      const listStart =
+        checkBefore >= 0 && wakeIdx - checkBefore <= 2
+          ? checkBefore
+          : wakeIdx;
+
+      const before = para.slice(0, listStart).trim();
+      if (before) {
+        blocks.push({ type: "paragraph", text: before });
+      }
+
+      const listText = para.slice(listStart);
+      const hasCheckmarks = listText.includes("\u2713");
+      const hasChecks = /\bCheck\b/i.test(listText);
+
+      let items: string[];
+      if (hasCheckmarks) {
+        items = [
+          "\u2713 Wake up",
+          "\u2713 Get out of bed",
+          "\u2713 Take a shower",
+          "\u2713 Go outside",
+        ];
+      } else if (hasChecks) {
+        items = [
+          "Wake up. Check.",
+          "Get out of bed. Check.",
+          "Take a shower. Check.",
+          "Go outside. Check.",
+        ];
+      } else {
+        items = [
+          "Wake up.",
+          "Get out of bed.",
+          "Take a shower.",
+          "Go outside.",
+        ];
+      }
+
+      blocks.push({ type: "whiteboard", items });
       continue;
     }
 

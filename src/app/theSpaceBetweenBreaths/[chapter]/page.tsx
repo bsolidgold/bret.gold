@@ -132,6 +132,22 @@ function renderBlock(block: ContentBlock, i: number, prev: ContentBlock | null) 
           {block.text}
         </h3>
       );
+    case "whiteboard":
+      return (
+        <div
+          key={i}
+          style={{
+            margin: "1.5em 0",
+            paddingLeft: "1.5em",
+          }}
+        >
+          {block.items.map((item, j) => (
+            <p key={j} style={{ marginBottom: "0.15em" }}>
+              {item}
+            </p>
+          ))}
+        </div>
+      );
   }
 }
 
