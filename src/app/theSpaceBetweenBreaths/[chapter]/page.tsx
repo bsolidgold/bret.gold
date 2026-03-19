@@ -11,6 +11,66 @@ export function generateStaticParams() {
   return chapters.map((ch) => ({ chapter: ch.slug }));
 }
 
+function ChapterNav({
+  prev,
+  next,
+  position,
+}: {
+  prev: { slug: string; number: number; title: string } | null;
+  next: { slug: string; number: number; title: string } | null;
+  position: "top" | "bottom";
+}) {
+  const border =
+    position === "top"
+      ? { borderBottom: "1px solid #444" }
+      : { borderTop: "1px solid #444" };
+  const spacing =
+    position === "top" ? "mb-12 pb-4" : "mt-20 pt-8";
+
+  return (
+    <div
+      className={`${spacing} flex justify-between items-center`}
+      style={border}
+    >
+      {prev ? (
+        <Link
+          href={`/theSpaceBetweenBreaths/${prev.slug}`}
+          className="hover:opacity-70 transition-opacity"
+          style={{ color: "#c9b88c" }}
+        >
+          <span className="text-xs block" style={{ color: "#999" }}>
+            &larr; Previous
+          </span>
+          {prev.number > 0 ? `${prev.number}. ${prev.title}` : prev.title}
+        </Link>
+      ) : (
+        <div />
+      )}
+      <Link
+        href="/theSpaceBetweenBreaths"
+        className="text-xs hover:opacity-70 transition-opacity"
+        style={{ color: "#999" }}
+      >
+        Contents
+      </Link>
+      {next ? (
+        <Link
+          href={`/theSpaceBetweenBreaths/${next.slug}`}
+          className="text-right hover:opacity-70 transition-opacity"
+          style={{ color: "#c9b88c" }}
+        >
+          <span className="text-xs block" style={{ color: "#999" }}>
+            Next &rarr;
+          </span>
+          {next.number > 0 ? `${next.number}. ${next.title}` : next.title}
+        </Link>
+      ) : (
+        <div />
+      )}
+    </div>
+  );
+}
+
 function renderBlock(block: ContentBlock, i: number, prev: ContentBlock | null) {
   switch (block.type) {
     case "paragraph": {
@@ -84,16 +144,8 @@ export default async function ChapterPage({
 
   return (
     <div className="max-w-xl mx-auto px-6 py-16 md:py-24">
-      {/* Back to contents */}
-      <div className="mb-16">
-        <Link
-          href="/theSpaceBetweenBreaths"
-          className="text-sm hover:opacity-70 transition-opacity"
-          style={{ color: "#777" }}
-        >
-          &larr; Contents
-        </Link>
-      </div>
+      {/* Top navigation */}
+      <ChapterNav prev={prev} next={next} position="top" />
 
       {/* Part header */}
       {meta.part && (
@@ -104,10 +156,10 @@ export default async function ChapterPage({
           >
             Part {meta.part.number}
           </p>
-          <p className="text-xl italic mb-1" style={{ color: "#a09880" }}>
+          <p className="text-xl italic mb-1" style={{ color: "#c9b88c" }}>
             {meta.part.title}
           </p>
-          <p className="text-sm italic" style={{ color: "#666" }}>
+          <p className="text-sm italic" style={{ color: "#999" }}>
             {meta.part.subtitle}
           </p>
           <div
@@ -142,44 +194,8 @@ export default async function ChapterPage({
         )}
       </div>
 
-      {/* Navigation */}
-      <div
-        className="mt-20 pt-8 flex justify-between items-center"
-        style={{ borderTop: "1px solid #222" }}
-      >
-        {prev ? (
-          <Link
-            href={`/theSpaceBetweenBreaths/${prev.slug}`}
-            className="hover:opacity-70 transition-opacity"
-            style={{ color: "#a09880" }}
-          >
-            <span className="text-xs block" style={{ color: "#666" }}>
-              Previous
-            </span>
-            {prev.number > 0
-              ? `${prev.number}. ${prev.title}`
-              : prev.title}
-          </Link>
-        ) : (
-          <div />
-        )}
-        {next ? (
-          <Link
-            href={`/theSpaceBetweenBreaths/${next.slug}`}
-            className="text-right hover:opacity-70 transition-opacity"
-            style={{ color: "#a09880" }}
-          >
-            <span className="text-xs block" style={{ color: "#666" }}>
-              Next
-            </span>
-            {next.number > 0
-              ? `${next.number}. ${next.title}`
-              : next.title}
-          </Link>
-        ) : (
-          <div />
-        )}
-      </div>
+      {/* Bottom navigation */}
+      <ChapterNav prev={prev} next={next} position="bottom" />
     </div>
   );
 }
