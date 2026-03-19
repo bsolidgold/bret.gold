@@ -28,38 +28,49 @@ function ChapterNav({
     position === "top" ? "mb-6 pb-3" : "mt-12 pt-6";
 
   return (
-    <div
-      className={`${spacing} flex justify-between items-center text-sm`}
-      style={border}
-    >
-      <div className="w-24">
-        {prev && (
+    <div className={spacing} style={border}>
+      <div className="flex justify-between items-start">
+        <div className="max-w-[40%]">
+          {prev && (
+            <Link
+              href={`/theSpaceBetweenBreaths/${prev.slug}`}
+              className="hover:opacity-70 transition-opacity block"
+              style={{ color: "#c9b88c" }}
+            >
+              <span className="text-xs block mb-0.5" style={{ color: "#999" }}>
+                &larr; Previous
+              </span>
+              <span className="text-sm">
+                {prev.number > 0 ? `${prev.number}. ${prev.title}` : prev.title}
+              </span>
+            </Link>
+          )}
+        </div>
+        <div className="pt-1">
           <Link
-            href={`/theSpaceBetweenBreaths/${prev.slug}`}
-            className="hover:opacity-70 transition-opacity"
-            style={{ color: "#c9b88c" }}
+            href="/theSpaceBetweenBreaths"
+            className="text-xs hover:opacity-70 transition-opacity"
+            style={{ color: "#999" }}
           >
-            &larr; {prev.number > 0 ? `Ch. ${prev.number}` : "Preface"}
+            Contents
           </Link>
-        )}
-      </div>
-      <Link
-        href="/theSpaceBetweenBreaths"
-        className="hover:opacity-70 transition-opacity"
-        style={{ color: "#999" }}
-      >
-        Contents
-      </Link>
-      <div className="w-24 text-right">
-        {next && (
-          <Link
-            href={`/theSpaceBetweenBreaths/${next.slug}`}
-            className="hover:opacity-70 transition-opacity"
-            style={{ color: "#c9b88c" }}
-          >
-            {next.number > 0 ? `Ch. ${next.number}` : "Preface"} &rarr;
-          </Link>
-        )}
+        </div>
+        <div className="max-w-[40%] text-right">
+          {next && (
+            <Link
+              href={`/theSpaceBetweenBreaths/${next.slug}`}
+              className="hover:opacity-70 transition-opacity block"
+              style={{ color: "#c9b88c" }}
+            >
+              <span className="text-xs block mb-0.5" style={{ color: "#999" }}>
+                Next &rarr;
+              </span>
+              <span className="text-sm">
+                {next.number > 0 ? `${next.number}. ${next.title}` : next.title}
+              </span>
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );
