@@ -25,7 +25,7 @@ function ChapterNav({
       ? { borderBottom: "1px solid #444" }
       : { borderTop: "1px solid #444" };
   const spacing =
-    position === "top" ? "mb-12 pb-4" : "mt-20 pt-8";
+    position === "top" ? "mb-6 pb-3" : "mt-12 pt-6";
 
   return (
     <div
@@ -143,37 +143,37 @@ export default async function ChapterPage({
   const { prev, next } = getAdjacentChapters(slug);
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-16 md:py-24">
+    <div className="max-w-xl mx-auto px-6 py-8 md:py-12">
       {/* Top navigation */}
       <ChapterNav prev={prev} next={next} position="top" />
 
       {/* Part header */}
       {meta.part && (
-        <div className="text-center mb-12">
+        <div className="text-center mb-6">
           <p
-            className="text-xs uppercase tracking-[0.3em] mb-2"
+            className="text-xs uppercase tracking-[0.3em] mb-1"
             style={{ color: "#c9a84c" }}
           >
             Part {meta.part.number}
           </p>
-          <p className="text-xl italic mb-1" style={{ color: "#c9b88c" }}>
+          <p className="text-lg italic mb-1" style={{ color: "#c9b88c" }}>
             {meta.part.title}
           </p>
           <p className="text-sm italic" style={{ color: "#999" }}>
             {meta.part.subtitle}
           </p>
           <div
-            className="w-16 h-px mx-auto mt-8"
+            className="w-12 h-px mx-auto mt-4"
             style={{ background: "#333" }}
           />
         </div>
       )}
 
       {/* Chapter title */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-6">
         {meta.number > 0 && (
           <p
-            className="text-xs uppercase tracking-[0.3em] mb-3"
+            className="text-xs uppercase tracking-[0.3em] mb-2"
             style={{ color: "#777" }}
           >
             Chapter {meta.number}
@@ -188,7 +188,7 @@ export default async function ChapterPage({
       </div>
 
       {/* Content */}
-      <div className="mt-12">
+      <div className="mt-6">
         {blocks.map((block, i) =>
           renderBlock(block, i, i > 0 ? blocks[i - 1] : null)
         )}

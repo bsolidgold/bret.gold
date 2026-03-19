@@ -37,10 +37,10 @@ const parts = [
 
 export default function BookCover() {
   return (
-    <div className="max-w-xl mx-auto px-6 py-16 md:py-24">
+    <div className="max-w-xl mx-auto px-6 py-8 md:py-12">
       {/* Top navigation */}
       <div
-        className="mb-12 pb-4 flex justify-between items-center"
+        className="mb-8 pb-3 flex justify-between items-center"
         style={{ borderBottom: "1px solid #444" }}
       >
         <Link
@@ -59,15 +59,15 @@ export default function BookCover() {
         </Link>
       </div>
 
-      <div className="text-center mb-24">
+      <div className="text-center mb-10">
         <h1
-          className="text-4xl md:text-5xl font-light tracking-wide mb-6"
+          className="text-3xl md:text-4xl font-light tracking-wide mb-4"
           style={{ color: "#e8e0d0" }}
         >
           The Space Between Breaths
         </h1>
         <div
-          className="w-16 h-px mx-auto mb-6"
+          className="w-16 h-px mx-auto mb-4"
           style={{ background: "#555" }}
         />
         <p
@@ -78,7 +78,7 @@ export default function BookCover() {
         </p>
       </div>
 
-      <div className="mb-16">
+      <div className="mb-8">
         <Link
           href="/theSpaceBetweenBreaths/preface"
           className="hover:opacity-70 transition-opacity"
@@ -89,14 +89,14 @@ export default function BookCover() {
       </div>
 
       {parts.map((part) => (
-        <div key={part.number} className="mb-14">
+        <div key={part.number} className="mb-8">
           <p
             className="text-xs uppercase tracking-[0.3em] mb-1"
             style={{ color: "#c9a84c" }}
           >
             Part {part.number}
           </p>
-          <p className="text-lg italic mb-5" style={{ color: "#a09880" }}>
+          <p className="text-lg italic mb-2" style={{ color: "#a09880" }}>
             {part.title}
           </p>
           <ul className="space-y-2.5 pl-5">
@@ -118,7 +118,7 @@ export default function BookCover() {
 
       {/* Bottom navigation */}
       <div
-        className="mt-16 pt-8 flex justify-center"
+        className="mt-10 pt-6 flex justify-center"
         style={{ borderTop: "1px solid #444" }}
       >
         <Link
