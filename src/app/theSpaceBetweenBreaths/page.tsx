@@ -37,7 +37,28 @@ const parts = [
 
 export default function BookCover() {
   return (
-    <div className="max-w-xl mx-auto px-6 py-20 md:py-32">
+    <div className="max-w-xl mx-auto px-6 py-16 md:py-24">
+      {/* Top navigation */}
+      <div
+        className="mb-12 pb-4 flex justify-between items-center"
+        style={{ borderBottom: "1px solid #444" }}
+      >
+        <Link
+          href="/"
+          className="text-sm hover:opacity-70 transition-opacity"
+          style={{ color: "#999" }}
+        >
+          &larr; bret.gold
+        </Link>
+        <Link
+          href="/theSpaceBetweenBreaths/preface"
+          className="text-sm hover:opacity-70 transition-opacity"
+          style={{ color: "#c9b88c" }}
+        >
+          Start Reading &rarr;
+        </Link>
+      </div>
+
       <div className="text-center mb-24">
         <h1
           className="text-4xl md:text-5xl font-light tracking-wide mb-6"
@@ -94,6 +115,20 @@ export default function BookCover() {
           </ul>
         </div>
       ))}
+
+      {/* Bottom navigation */}
+      <div
+        className="mt-16 pt-8 flex justify-center"
+        style={{ borderTop: "1px solid #444" }}
+      >
+        <Link
+          href="/theSpaceBetweenBreaths/preface"
+          className="hover:opacity-70 transition-opacity"
+          style={{ color: "#c9b88c" }}
+        >
+          Start Reading &rarr;
+        </Link>
+      </div>
     </div>
   );
 }
