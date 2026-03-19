@@ -29,44 +29,38 @@ function ChapterNav({
 
   return (
     <div
-      className={`${spacing} flex justify-between items-center`}
+      className={`${spacing} flex justify-between items-center text-sm`}
       style={border}
     >
-      {prev ? (
-        <Link
-          href={`/theSpaceBetweenBreaths/${prev.slug}`}
-          className="hover:opacity-70 transition-opacity"
-          style={{ color: "#c9b88c" }}
-        >
-          <span className="text-xs block" style={{ color: "#999" }}>
-            &larr; Previous
-          </span>
-          {prev.number > 0 ? `${prev.number}. ${prev.title}` : prev.title}
-        </Link>
-      ) : (
-        <div />
-      )}
+      <div className="w-24">
+        {prev && (
+          <Link
+            href={`/theSpaceBetweenBreaths/${prev.slug}`}
+            className="hover:opacity-70 transition-opacity"
+            style={{ color: "#c9b88c" }}
+          >
+            &larr; {prev.number > 0 ? `Ch. ${prev.number}` : "Preface"}
+          </Link>
+        )}
+      </div>
       <Link
         href="/theSpaceBetweenBreaths"
-        className="text-xs hover:opacity-70 transition-opacity"
+        className="hover:opacity-70 transition-opacity"
         style={{ color: "#999" }}
       >
         Contents
       </Link>
-      {next ? (
-        <Link
-          href={`/theSpaceBetweenBreaths/${next.slug}`}
-          className="text-right hover:opacity-70 transition-opacity"
-          style={{ color: "#c9b88c" }}
-        >
-          <span className="text-xs block" style={{ color: "#999" }}>
-            Next &rarr;
-          </span>
-          {next.number > 0 ? `${next.number}. ${next.title}` : next.title}
-        </Link>
-      ) : (
-        <div />
-      )}
+      <div className="w-24 text-right">
+        {next && (
+          <Link
+            href={`/theSpaceBetweenBreaths/${next.slug}`}
+            className="hover:opacity-70 transition-opacity"
+            style={{ color: "#c9b88c" }}
+          >
+            {next.number > 0 ? `Ch. ${next.number}` : "Preface"} &rarr;
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
