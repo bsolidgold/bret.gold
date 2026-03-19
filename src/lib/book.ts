@@ -68,11 +68,68 @@ export function parseChapterContent(
     }
   }
 
-  const bodyText = lines.slice(startIndex).join("\n");
-  const paragraphs = bodyText
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
+  // Split into raw blocks: use blank lines first, then treat each
+  // remaining line as its own block (many chapter files use single newlines)
+  const bodyLines = lines.slice(startIndex);
+  const rawBlocks: string[] = [];
+  let currentBlock: string[] = [];
+
+  for (const line of bodyLines) {
+    if (line.trim() === "") {
+      if (currentBlock.length > 0) {
+        rawBlocks.push(currentBlock.join(" "));
+        currentBlock = [];
+      }
+    } else {
+      // If this line starts with » or is a section break, it's its own block
+      // even without a blank line before it
+      const trimmed = line.trim();
+      if (
+        /^[\*]?\u00bb/.test(trimmed) ||
+        /^-{3,}$/.test(trimmed)
+      ) {
+        if (currentBlock.length > 0) {
+          rawBlocks.push(currentBlock.join(" "));
+          currentBlock = [];
+        }
+        rawBlocks.push(trimmed);
+      } else {
+        // Check if previous block content ends with « (aside just ended)
+        // or if this is clearly a new paragraph (short lines often are)
+        if (currentBlock.length > 0) {
+          const prev = currentBlock[currentBlock.length - 1].trim();
+          if (prev.endsWith("\u00ab") || prev.endsWith("\u00ab*")) {
+            rawBlocks.push(currentBlock.join(" "));
+            currentBlock = [];
+          }
+        }
+        currentBlock.push(line);
+      }
+    }
+  }
+  if (currentBlock.length > 0) {
+    rawBlocks.push(currentBlock.join(" "));
+  }
+
+  // Now also split any block that has an inline »...« embedded within it
+  const paragraphs: string[] = [];
+  for (const block of rawBlocks) {
+    const trimmed = block.trim();
+    if (!trimmed) continue;
+
+    // Check for inline asides: text before »...« text after
+    const asidePattern = /([\*]?\u00bb[^\u00ab]+\u00ab[\*]?)/g;
+    if (asidePattern.test(trimmed) && !trimmed.startsWith("\u00bb") && !trimmed.startsWith("*\u00bb")) {
+      // Split around the aside(s)
+      const parts = trimmed.split(/([\*]?\u00bb[^\u00ab]+\u00ab[\*]?)/g);
+      for (const part of parts) {
+        const p = part.trim();
+        if (p) paragraphs.push(p);
+      }
+    } else {
+      paragraphs.push(trimmed);
+    }
+  }
 
   for (const para of paragraphs) {
     if (/^-{3,}$/.test(para)) {
