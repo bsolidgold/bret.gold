@@ -59,6 +59,7 @@ export function parseChapterContent(
       line.startsWith("PART ") ||
       (line.startsWith("(") && line.endsWith(")") && line.length < 100) ||
       line.startsWith("Chapter ") ||
+      line === "Preface" ||
       line === ""
     ) {
       startIndex = i + 1;
