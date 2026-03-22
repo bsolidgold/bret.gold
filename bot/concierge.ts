@@ -320,6 +320,17 @@ const commands = [
       opt.setName("message").setDescription("Your anonymous message").setRequired(true)
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName("pitches")
+    .setDescription("Post the latest ThePorra satire pitches for review")
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName("suggest")
+    .setDescription("Suggest a satire topic for ThePorra")
+    .addStringOption((opt) =>
+      opt.setName("topic").setDescription("Your satire topic or headline idea").setRequired(true)
+    )
+    .toJSON(),
 ];
 
 async function registerCommands() {
@@ -959,6 +970,169 @@ function startScheduledPrompts() {
   console.log("Scheduled prompts active (check-in daily 9am, question monday 10am, now-playing friday 5pm EST).");
 }
 
+// --- ThePorra Satire Pitches ---
+
+const SATIRE_CHANNEL = "satire-pitches";
+const SATIRE_SELECTIONS_FILE = resolve(__dirname, "../.satire-selections.json");
+const BJJDIGEST_DIR = process.env.BJJDIGEST_DIR || "/Users/bretgold/Documents/gitHub/bjjDigest";
+
+// Track the most recent pitch message ID so we know which pitches a reply refers to
+let lastPitchMessageId: string | null = null;
+let lastPitchData: Array<{ index: number; headline: string; slug: string }> = [];
+
+/**
+ * Post satire pitches to the #satire-pitches channel.
+ * Called by the satire engine via the /pitches slash command or cron.
+ */
+async function postSatirePitches() {
+  const pitchesPath = resolve(BJJDIGEST_DIR, "output/queue/satire-pitches.json");
+  if (!existsSync(pitchesPath)) {
+    console.log("[satire] No pitches file found");
+    return;
+  }
+
+  const pitches = JSON.parse(readFileSync(pitchesPath, "utf-8"));
+  if (!pitches.length) return;
+
+  // Sort by score descending, take top 15
+  const sorted = pitches
+    .sort((a: any, b: any) => (b.scores?.total || 0) - (a.scores?.total || 0))
+    .slice(0, 15);
+
+  const guild = await client.guilds.fetch(GUILD_ID);
+  const channel = guild.channels.cache.find(
+    (c) => c.name === SATIRE_CHANNEL && c.type === ChannelType.GuildText
+  );
+  if (!channel || !("send" in channel)) {
+    console.log("[satire] #satire-pitches channel not found");
+    return;
+  }
+
+  // Build the numbered list
+  const lines = sorted.map((p: any, i: number) => {
+    const score = p.scores?.total || 0;
+    const structure = p.jokeStructure || "?";
+    return `**${i + 1}.** [${score}] ${p.headline}\n   _${structure} · ${p.category || "?"}_`;
+  });
+
+  // Store pitch data for reply matching
+  lastPitchData = sorted.map((p: any, i: number) => ({
+    index: i + 1,
+    headline: p.headline,
+    slug: (p.headline || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60),
+  }));
+
+  const embed = new EmbedBuilder()
+    .setColor(0xe60000)
+    .setTitle("🔥 ThePorra Satire Pitches")
+    .setDescription(lines.join("\n\n"))
+    .setFooter({ text: "Reply with the numbers you want published (e.g. 1, 4, 7)" });
+
+  const msg = await channel.send({ embeds: [embed] });
+  lastPitchMessageId = msg.id;
+  console.log(`[satire] Posted ${sorted.length} pitches to #${SATIRE_CHANNEL}`);
+}
+
+/**
+ * Handle a reply to the pitches message.
+ * Parses numbers from the reply and saves selections.
+ */
+async function handleSatireReply(message: import("discord.js").Message) {
+  // Extract numbers from the message
+  const numbers = message.content.match(/\d+/g);
+  if (!numbers || numbers.length === 0) return;
+
+  const selectedIndices = numbers.map(Number).filter((n) => n >= 1 && n <= lastPitchData.length);
+  if (selectedIndices.length === 0) return;
+
+  const selections = selectedIndices.map((i) => lastPitchData[i - 1]).filter(Boolean);
+
+  // Load existing selections
+  let existing: any[] = [];
+  try {
+    if (existsSync(SATIRE_SELECTIONS_FILE)) {
+      existing = JSON.parse(readFileSync(SATIRE_SELECTIONS_FILE, "utf-8"));
+    }
+  } catch {}
+
+  // Add new selections
+  const newSelections = selections.map((s) => ({
+    ...s,
+    selectedAt: new Date().toISOString(),
+    selectedBy: message.author.username,
+    published: false,
+  }));
+
+  const merged = [...existing, ...newSelections];
+  writeFileSync(SATIRE_SELECTIONS_FILE, JSON.stringify(merged, null, 2));
+
+  // Also write to bjjDigest repo for the publish pipeline
+  const bjjDigestSelectionsPath = resolve(BJJDIGEST_DIR, "output/queue/satire-selections.json");
+  try {
+    writeFileSync(bjjDigestSelectionsPath, JSON.stringify(merged, null, 2));
+  } catch (e) {
+    console.log(`[satire] Could not write to bjjDigest: ${e}`);
+  }
+
+  // Confirm
+  const headlines = selections.map((s) => `• ${s.headline}`).join("\n");
+  await message.reply({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x00cc88)
+        .setTitle(`✓ ${selections.length} pitch${selections.length > 1 ? "es" : ""} queued for ThePorra`)
+        .setDescription(headlines)
+        .setFooter({ text: "These will be written and published on the next pipeline run" }),
+    ],
+  });
+
+  console.log(`[satire] ${selections.length} pitches selected by ${message.author.username}`);
+}
+
+/**
+ * Handle a /suggest command — adds a user-suggested topic to the satire pitches queue.
+ */
+async function handleSuggestion(interaction: ChatInputCommandInteraction, topic: string) {
+  const suggestionsPath = resolve(BJJDIGEST_DIR, "output/queue/satire-suggestions.json");
+
+  let suggestions: any[] = [];
+  try {
+    if (existsSync(suggestionsPath)) {
+      suggestions = JSON.parse(readFileSync(suggestionsPath, "utf-8"));
+    }
+  } catch {}
+
+  suggestions.push({
+    topic,
+    suggestedBy: interaction.user.username,
+    suggestedAt: new Date().toISOString(),
+    used: false,
+  });
+
+  try {
+    writeFileSync(suggestionsPath, JSON.stringify(suggestions, null, 2));
+  } catch (e) {
+    await interaction.reply({ content: `Failed to save suggestion: ${e}`, ephemeral: true });
+    return;
+  }
+
+  await interaction.reply({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0xe60000)
+        .setTitle("Topic Suggested")
+        .setDescription(`"${topic}"`)
+        .setFooter({ text: "The satire engine will consider this on its next run" }),
+    ],
+  });
+
+  console.log(`[satire] Topic suggested by ${interaction.user.username}: ${topic}`);
+}
+
 // --- Floor 13 Easter Egg ---
 
 const ROOFTOP_TRIGGER = /\btake me to the roof\b/i;
@@ -1045,6 +1219,15 @@ client.on("interactionCreate", async (interaction) => {
       case "anon":
         await handleAnon(interaction);
         break;
+      case "pitches":
+        await interaction.deferReply();
+        await postSatirePitches();
+        await interaction.editReply("Pitches posted to #satire-pitches");
+        break;
+      case "suggest":
+        const topic = (interaction as ChatInputCommandInteraction).options.getString("topic", true);
+        await handleSuggestion(interaction as ChatInputCommandInteraction, topic);
+        break;
     }
   } else if (interaction.isButton()) {
     await handleButton(interaction);
@@ -1066,6 +1249,12 @@ client.on("messageCreate", async (message) => {
   const emoji = AUTO_REACTIONS[channelName];
   if (emoji) {
     await message.react(emoji).catch(() => {});
+  }
+
+  // Satire pitch replies
+  const channelNameForSatire = "name" in message.channel ? (message.channel as any).name : "";
+  if (channelNameForSatire === SATIRE_CHANNEL && lastPitchData.length > 0) {
+    await handleSatireReply(message);
   }
 
   // Floor 13 easter egg
