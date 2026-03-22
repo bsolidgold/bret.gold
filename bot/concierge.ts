@@ -976,9 +976,23 @@ const SATIRE_CHANNEL = "satire-pitches";
 const SATIRE_SELECTIONS_FILE = resolve(__dirname, "../.satire-selections.json");
 const BJJDIGEST_DIR = process.env.BJJDIGEST_DIR || "/Users/bretgold/Documents/gitHub/bjjDigest";
 
-// Track the most recent pitch message ID so we know which pitches a reply refers to
-let lastPitchMessageId: string | null = null;
-let lastPitchData: Array<{ index: number; headline: string; slug: string }> = [];
+// Pitch data persisted to disk — works across restarts and webhook posts
+const PITCH_STATE_FILE = resolve(__dirname, "../.satire-pitch-state.json");
+
+function loadPitchState(): Array<{ index: number; headline: string; slug: string }> {
+  try {
+    if (existsSync(PITCH_STATE_FILE)) {
+      return JSON.parse(readFileSync(PITCH_STATE_FILE, "utf-8"));
+    }
+  } catch {}
+  return [];
+}
+
+function savePitchState(data: Array<{ index: number; headline: string; slug: string }>) {
+  writeFileSync(PITCH_STATE_FILE, JSON.stringify(data, null, 2));
+}
+
+let lastPitchData = loadPitchState();
 
 /**
  * Post satire pitches to the #satire-pitches channel.
@@ -1015,7 +1029,7 @@ async function postSatirePitches() {
     return `**${i + 1}.** [${score}] ${p.headline}\n   _${structure} · ${p.category || "?"}_`;
   });
 
-  // Store pitch data for reply matching
+  // Store pitch data for reply matching (persisted to disk)
   lastPitchData = sorted.map((p: any, i: number) => ({
     index: i + 1,
     headline: p.headline,
@@ -1025,6 +1039,7 @@ async function postSatirePitches() {
       .replace(/^-|-$/g, "")
       .slice(0, 60),
   }));
+  savePitchState(lastPitchData);
 
   const embed = new EmbedBuilder()
     .setColor(0xe60000)
@@ -1253,8 +1268,12 @@ client.on("messageCreate", async (message) => {
 
   // Satire pitch replies
   const channelNameForSatire = "name" in message.channel ? (message.channel as any).name : "";
-  if (channelNameForSatire === SATIRE_CHANNEL && lastPitchData.length > 0) {
-    await handleSatireReply(message);
+  if (channelNameForSatire === SATIRE_CHANNEL) {
+    // Reload pitch state from disk (may have been written by webhook flow)
+    lastPitchData = loadPitchState();
+    if (lastPitchData.length > 0) {
+      await handleSatireReply(message);
+    }
   }
 
   // Floor 13 easter egg
