@@ -1099,12 +1099,14 @@ async function handleSatireReply(message: import("discord.js").Message) {
   const merged = [...existing, ...newSelections];
   writeFileSync(SATIRE_SELECTIONS_FILE, JSON.stringify(merged, null, 2));
 
-  // Also write to bjjDigest repo for the publish pipeline
-  const bjjDigestSelectionsPath = resolve(BJJDIGEST_DIR, "output/queue/satire-selections.json");
+  // Push selections back to the bret.gold repo so the local machine can read them
   try {
-    writeFileSync(bjjDigestSelectionsPath, JSON.stringify(merged, null, 2));
-  } catch (e) {
-    console.log(`[satire] Could not write to bjjDigest: ${e}`);
+    const { execSync } = await import("child_process");
+    const repoRoot = resolve(__dirname, "..");
+    execSync(`cd "${repoRoot}" && git add .satire-selections.json && git commit -m "data: satire selections by ${message.author.username}" && git push`, { stdio: "pipe" });
+    console.log("[satire] Selections pushed to GitHub");
+  } catch (e: any) {
+    console.log(`[satire] Git push failed (may be no changes): ${e.message?.slice(0, 100)}`);
   }
 
   // Confirm
