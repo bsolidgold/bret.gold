@@ -1022,8 +1022,34 @@ async function postSatirePitches() {
   const pitches = JSON.parse(readFileSync(pitchesPath, "utf-8"));
   if (!pitches.length) return;
 
-  // Sort by score descending, take top 15
-  const sorted = pitches
+  // Load used/bad slugs to filter out
+  const usedSlugs = new Set<string>();
+  try {
+    if (existsSync(SATIRE_SELECTIONS_FILE)) {
+      const selections = JSON.parse(readFileSync(SATIRE_SELECTIONS_FILE, "utf-8"));
+      for (const s of selections) usedSlugs.add(s.slug);
+    }
+  } catch {}
+  try {
+    const feedbackFile = resolve(__dirname, "../.satire-feedback.json");
+    if (existsSync(feedbackFile)) {
+      const feedback = JSON.parse(readFileSync(feedbackFile, "utf-8"));
+      for (const f of feedback) usedSlugs.add(f.slug);
+    }
+  } catch {}
+
+  // Filter out used and bad pitches, then sort and take top 15
+  const fresh = pitches.filter((p: any) => {
+    const slug = (p.headline || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+    return !usedSlugs.has(slug);
+  });
+
+  if (!fresh.length) {
+    console.log("[satire] All pitches have been used or flagged — nothing new to show");
+    return;
+  }
+
+  const sorted = fresh
     .sort((a: any, b: any) => (b.scores?.total || 0) - (a.scores?.total || 0))
     .slice(0, 15);
 
