@@ -1200,7 +1200,7 @@ async function handleSatireReply(message: import("discord.js").Message) {
  * Handle a /suggest command — adds a user-suggested topic to the satire pitches queue.
  */
 async function handleSuggestion(interaction: ChatInputCommandInteraction, topic: string) {
-  const suggestionsPath = resolve(BJJDIGEST_DIR, "output/queue/satire-suggestions.json");
+  const suggestionsPath = resolve(__dirname, "../.satire-suggestions.json");
 
   let suggestions: any[] = [];
   try {
@@ -1221,6 +1221,15 @@ async function handleSuggestion(interaction: ChatInputCommandInteraction, topic:
   } catch (e) {
     await interaction.reply({ content: `Failed to save suggestion: ${e}`, ephemeral: true });
     return;
+  }
+
+  // Push to GitHub so the satire engine can read it
+  try {
+    const { execSync } = await import("child_process");
+    const repoRoot = resolve(__dirname, "..");
+    execSync(`cd "${repoRoot}" && git add .satire-suggestions.json && git commit -m "data: satire suggestion from ${interaction.user.username}" && git push`, { stdio: "pipe" });
+  } catch (e: any) {
+    console.log(`[satire] Suggestion push failed: ${e.message?.slice(0, 100)}`);
   }
 
   await interaction.reply({
