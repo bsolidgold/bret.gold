@@ -1071,16 +1071,63 @@ async function postSatirePitches() {
  * Parses numbers from the reply and saves selections.
  */
 async function handleSatireReply(message: import("discord.js").Message) {
+  const content = message.content.toLowerCase().trim();
+  const isBadFlag = content.startsWith("bad:") || content.startsWith("bad ") || content.startsWith("trash:") || content.startsWith("trash ");
+
   // Extract numbers from the message
   const numbers = message.content.match(/\d+/g);
   if (!numbers || numbers.length === 0) return;
 
-  const selectedIndices = numbers.map(Number).filter((n) => n >= 1 && n <= lastPitchData.length);
-  if (selectedIndices.length === 0) return;
+  const indices = numbers.map(Number).filter((n) => n >= 1 && n <= lastPitchData.length);
+  if (indices.length === 0) return;
 
-  const selections = selectedIndices.map((i) => lastPitchData[i - 1]).filter(Boolean);
+  const matched = indices.map((i) => lastPitchData[i - 1]).filter(Boolean);
 
-  // Load existing selections
+  if (isBadFlag) {
+    // --- BAD PITCHES: save as negative feedback ---
+    const FEEDBACK_FILE = resolve(__dirname, "../.satire-feedback.json");
+    let feedback: any[] = [];
+    try {
+      if (existsSync(FEEDBACK_FILE)) {
+        feedback = JSON.parse(readFileSync(FEEDBACK_FILE, "utf-8"));
+      }
+    } catch {}
+
+    const newFeedback = matched.map((s) => ({
+      ...s,
+      rating: "bad",
+      flaggedAt: new Date().toISOString(),
+      flaggedBy: message.author.username,
+    }));
+
+    feedback.push(...newFeedback);
+    writeFileSync(FEEDBACK_FILE, JSON.stringify(feedback, null, 2));
+
+    // Push feedback to repo
+    try {
+      const { execSync } = await import("child_process");
+      const repoRoot = resolve(__dirname, "..");
+      execSync(`cd "${repoRoot}" && git add .satire-feedback.json && git commit -m "data: bad pitch feedback from ${message.author.username}" && git push`, { stdio: "pipe" });
+    } catch (e: any) {
+      console.log(`[satire] Feedback push failed: ${e.message?.slice(0, 100)}`);
+    }
+
+    const headlines = matched.map((s) => `• ${s.headline}`).join("\n");
+    await message.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle(`✗ ${matched.length} pitch${matched.length > 1 ? "es" : ""} flagged as bad`)
+          .setDescription(headlines)
+          .setFooter({ text: "The satire engine will learn from this" }),
+      ],
+    });
+
+    console.log(`[satire] ${matched.length} pitches flagged as bad by ${message.author.username}`);
+    return;
+  }
+
+  // --- GOOD PITCHES: queue for publishing ---
   let existing: any[] = [];
   try {
     if (existsSync(SATIRE_SELECTIONS_FILE)) {
@@ -1088,9 +1135,9 @@ async function handleSatireReply(message: import("discord.js").Message) {
     }
   } catch {}
 
-  // Add new selections
-  const newSelections = selections.map((s) => ({
+  const newSelections = matched.map((s) => ({
     ...s,
+    rating: "good",
     selectedAt: new Date().toISOString(),
     selectedBy: message.author.username,
     published: false,
@@ -1099,7 +1146,7 @@ async function handleSatireReply(message: import("discord.js").Message) {
   const merged = [...existing, ...newSelections];
   writeFileSync(SATIRE_SELECTIONS_FILE, JSON.stringify(merged, null, 2));
 
-  // Push selections back to the bret.gold repo so the local machine can read them
+  // Push selections back to repo
   try {
     const { execSync } = await import("child_process");
     const repoRoot = resolve(__dirname, "..");
@@ -1110,12 +1157,12 @@ async function handleSatireReply(message: import("discord.js").Message) {
   }
 
   // Confirm
-  const headlines = selections.map((s) => `• ${s.headline}`).join("\n");
+  const headlines = matched.map((s) => `• ${s.headline}`).join("\n");
   await message.reply({
     embeds: [
       new EmbedBuilder()
         .setColor(0x00cc88)
-        .setTitle(`✓ ${selections.length} pitch${selections.length > 1 ? "es" : ""} queued for ThePorra`)
+        .setTitle(`✓ ${matched.length} pitch${matched.length > 1 ? "es" : ""} queued for ThePorra`)
         .setDescription(headlines)
         .setFooter({ text: "These will be written and published on the next pipeline run" }),
     ],
