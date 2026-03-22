@@ -1061,8 +1061,7 @@ async function postSatirePitches() {
     .setDescription(lines.join("\n\n"))
     .setFooter({ text: "Reply with the numbers you want published (e.g. 1, 4, 7)" });
 
-  const msg = await channel.send({ embeds: [embed] });
-  lastPitchMessageId = msg.id;
+  await channel.send({ embeds: [embed] });
   console.log(`[satire] Posted ${sorted.length} pitches to #${SATIRE_CHANNEL}`);
 }
 
