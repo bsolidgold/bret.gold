@@ -967,14 +967,24 @@ function startScheduledPrompts() {
     }
   });
 
-  console.log("Scheduled prompts active (check-in daily 9am, question monday 10am, now-playing friday 5pm EST).");
+  // ThePorra satire pitches — post after satire engine runs (8am + 6pm → check at 8:15 + 6:15)
+  cron.schedule("15 13 * * *", async () => {  // 8:15 AM EST = 13:15 UTC
+    console.log("[satire] Scheduled pitch check (morning)");
+    await postSatirePitches();
+  });
+  cron.schedule("15 23 * * *", async () => {  // 6:15 PM EST = 23:15 UTC
+    console.log("[satire] Scheduled pitch check (evening)");
+    await postSatirePitches();
+  });
+
+  console.log("Scheduled prompts active (check-in daily 9am, question monday 10am, now-playing friday 5pm, satire pitches 8:15am+6:15pm EST).");
 }
 
 // --- ThePorra Satire Pitches ---
 
 const SATIRE_CHANNEL = "satire-pitches";
 const SATIRE_SELECTIONS_FILE = resolve(__dirname, "../.satire-selections.json");
-const BJJDIGEST_DIR = process.env.BJJDIGEST_DIR || "/Users/bretgold/Documents/gitHub/bjjDigest";
+const BJJDIGEST_DIR = process.env.BJJDIGEST_DIR || resolve(__dirname, "..");
 
 // Pitch data persisted to disk — works across restarts and webhook posts
 const PITCH_STATE_FILE = resolve(__dirname, "../.satire-pitch-state.json");
@@ -999,7 +1009,11 @@ let lastPitchData = loadPitchState();
  * Called by the satire engine via the /pitches slash command or cron.
  */
 async function postSatirePitches() {
-  const pitchesPath = resolve(BJJDIGEST_DIR, "output/queue/satire-pitches.json");
+  // Look for pitches in bot repo first (synced by satire engine), fallback to bjjDigest
+  let pitchesPath = resolve(__dirname, "satire-pitches.json");
+  if (!existsSync(pitchesPath)) {
+    pitchesPath = resolve(BJJDIGEST_DIR, "output/queue/satire-pitches.json");
+  }
   if (!existsSync(pitchesPath)) {
     console.log("[satire] No pitches file found");
     return;
