@@ -31,9 +31,9 @@
   },
   {
     "headline": "Family Built On 'Respect And Honor' Continues Multi-Generational Streak Of Neither",
-    "pitch": "The Gracie dynasty — whose brand is built on discipline, respect, and martial arts honor — expanded its legacy this week when Renzo commented on abuse allegations with a victim-blaming remark about a woman's appearance. This follows: quoting Heinrich Himmler on Twitter, chasing muggers through NYC for sport, documented homophobia, and publicly supporting authoritarian politicians. Two r/bjj threads totaling 1,570 upvotes and 589 comments this week alone. Top comment (755 pts): 'Being a BJJ black belt doesn't make you a good person.' NOTE: targets structural hypocrisy of the family brand, not abuse victims.",
+    "pitch": "The Gracie dynasty — whose brand is built on discipline, respect, and martial arts honor — expanded its legacy this week when Renzo commented on abuse allegations with a victim-blaming remark about a woman's appearance. This follows: quoting Heinrich Himmler on Twitter, chasing muggers through NYC for sport, documented homophobia, and publicly supporting authoritarian politicians. Two r/bjj threads totaling 1,583 upvotes and 589 comments this week alone. NOTE: targets structural hypocrisy of the family brand, not abuse victims.",
     "jokeStructure": "obvious-subtext",
-    "sourceInspiration": "Renzo Gracie victim-blaming comment (848+726 pts across two threads); broader Gracie family behavioral pattern",
+    "sourceInspiration": "Renzo Gracie victim-blaming comment (851+725 pts across two threads); broader Gracie family behavioral pattern",
     "category": "community",
     "scores": {
       "headline": 9,
@@ -48,7 +48,7 @@
     "headline": "Local Hero Uses Jiu-Jitsu To Stop Dog Attack, Neglects To Mention The Part Where He Oil Checked The Dog",
     "pitch": "A blue belt successfully RNC'd an attacking dog — correct, admirable, effective. He then attempted an oil check on the animal. He also made a woman try the oil check first. Community verdict: 'Sounds like your oil checks need some work.' The man's neighbors now know him exclusively as That Guy. The RNC works on dogs, the oil check does not, and you probably shouldn't lead with that part of the story.",
     "jokeStructure": "mundane-breaking",
-    "sourceInspiration": "Reddit r/bjj: Blue belt uses BJJ on attacking dog including attempted oil check (190 pts, 82 comments)",
+    "sourceInspiration": "Reddit r/bjj: Blue belt uses BJJ on attacking dog including attempted oil check (198 pts, 85 comments)",
     "category": "gym-culture",
     "scores": {
       "headline": 9,
@@ -91,7 +91,7 @@
   },
   {
     "headline": "Dillon Danis Now Booked On Two Separate Events, Doubling The Number Of Events He Won't Show Up To",
-    "pitch": "Dillon Danis is scheduled to wrestle Colby Covington at RAF 7 on March 28 AND headline CJI 3 against Craig Jones later this year. This gives him two separate opportunities to pull out at the last minute, representing a 200% increase in cancellation potential. His last competitive grappling match was approximately nine years ago. His recent resume includes: getting kicked out of Logan Paul's wedding, losing to Logan Paul in MMA, and posting on Twitter. RAF 7 is six days away.",
+    "pitch": "Dillon Danis is scheduled to wrestle Colby Covington at RAF 7 on March 28 AND headline CJI 3 against Craig Jones later this year. This gives him two separate opportunities to pull out at the last minute, representing a 200% increase in cancellation potential. His last competitive grappling match was approximately nine years ago. His recent resume includes: getting kicked out of Logan Paul's wedding, losing to Logan Paul in MMA, and posting on Twitter. RAF 7 is 6 days away.",
     "jokeStructure": "obvious-subtext",
     "sourceInspiration": "Danis booked for RAF 7 (March 28) + CJI 3 headline vs Jones; track record of pullouts",
     "category": "athlete-news",
@@ -120,6 +120,36 @@
     "generated": "2026-03-22T22:00:00Z"
   },
   {
+    "headline": "Alliance Jiu-Jitsu Holds Meeting About Gym Safety; Community Reacts As If They Invented Indoor Plumbing",
+    "pitch": "In the same week that Andre Galvao unsuspended himself from his own company, Renzo Gracie victim-blamed a woman online, and a BJJ coach allegedly threatened to revoke an athlete's visa for reporting sexual assault — Alliance held a meeting. A meeting. About athlete safety. The community erupted in praise. 'Finally someone is doing something,' which tells you everything you need to know about the baseline expectation in this sport. The bar for 'doing the right thing' in Brazilian Jiu-Jitsu is now: held a meeting about the right thing. Alliance did not cure cancer. They did not solve world hunger. They talked about a thing that every organization in every industry has been talking about for decades. Standing ovation.",
+    "jokeStructure": "systemic-absurdity",
+    "sourceInspiration": "Alliance gym holds proactive safety meeting amid Atos/Checkmat/10th Planet scandals; community praises the bare minimum",
+    "category": "community",
+    "scores": {
+      "headline": 9,
+      "snark": 9,
+      "timeliness": 9,
+      "originality": 8,
+      "total": 35
+    },
+    "generated": "2026-03-23T06:00:00Z"
+  },
+  {
+    "headline": "Local Gym's Purple Belts Now Classified As Essential Workers Due To Unprecedented Alpha Male Intake",
+    "pitch": "A national survey of BJJ gym owners confirms what your bored, hungry purple belts already knew: the influx of overconfident young men who 'just want to see what they're made of' has reached critical mass. The standard pipeline — arrive jacked, demand to roll immediately, go 100% against someone's grandmother, lose to a 155-pound software engineer, ragequit, post on Instagram that BJJ is 'bullshit' — now runs on a 2-week cycle per specimen. One gym near a naval special warfare base reports processing up to twelve alpha males per month (330 pts). The designated enforcer — a 5'3\" competition-class blue belt woman — has been promoted to full-time. 'Whatever, I didn't want to come to your sweaty pajama orgy anyway,' read the most recent Yelp review. One reformed alpha confirmed the pipeline's endpoint: 'I don't really think I'm so tough anymore.'",
+    "jokeStructure": "universal-specific",
+    "sourceInspiration": "Reddit r/bjj 'Alpha maleness?' (210 pts, 194 comments) — gym enforcer pipeline, 'feed them to your bored hungry purples' (206 pts), naval base (330 pts), 'sweaty pajama orgy' (31 pts)",
+    "category": "gym-culture",
+    "scores": {
+      "headline": 9,
+      "snark": 9,
+      "timeliness": 9,
+      "originality": 8,
+      "total": 35
+    },
+    "generated": "2026-03-22T22:00:00Z"
+  },
+  {
     "headline": "Power Slap Secures National TV Deal Before BJJ, Confirming That Getting Slapped In The Face Is More Marketable Than 20 Minutes Of Wrist Fighting",
     "pitch": "Demetrious 'Mighty Mouse' Johnson — widely considered the greatest pound-for-pound MMA fighter in history — publicly questioned how Power Slap has a broadcast deal and jiu-jitsu doesn't. Sources close to the situation confirm that a sport where two people stand still and take turns hitting each other has proven easier to explain to television executives than 'well, see, he's threatening a berimbolo from a de la Riva hook, which forces a reaction that—' and the executive has already changed the channel.",
     "jokeStructure": "systemic-absurdity",
@@ -138,7 +168,7 @@
     "headline": "Peer-Reviewed Study Finds Closed Guard Armbar Is Theoretical Concept, Not Actual Technique",
     "pitch": "A community-wide survey of 319 respondents has confirmed that certain BJJ techniques exist only in instructional videos and never in live rolling. Closed guard armbars top the list — 'They're a myth,' reported one purple belt. North-south chokes scored 82% failure rate. One practitioner confessed he 'actively gets off mount to take side control,' the grappling equivalent of returning a promotion. The arm triangle was the most tragic entry: respondents report achieving the position consistently, holding it for 45 seconds, and receiving pity taps from partners who want to move on with their lives. One man has been workshopping arm triangles 'for years' and has never finished one. He does not intend to stop.",
     "jokeStructure": "systemic-absurdity",
-    "sourceInspiration": "Reddit r/bjj 'Techniques that don't work for you' (97 pts, 319 comments) — armbar myth, arm triangle pity taps, voluntarily dismounting",
+    "sourceInspiration": "Reddit r/bjj 'Techniques that don't work for you' (98 pts, 319 comments) — armbar myth, arm triangle pity taps, voluntarily dismounting",
     "category": "technique",
     "scores": {
       "headline": 9,
@@ -151,7 +181,7 @@
   },
   {
     "headline": "Women's Grappling Team Named 'Team Tren' Insists Name Refers To 'Tremendous Work Ethic'",
-    "pitch": "The Finishers Women's Survivor Series 2 — which streamed today on FloGrappling YouTube — featured eight five-woman teams including one literally called 'Team Tren.' In a sport where PED use is the open secret everyone jokes about with açaí references, a competitive team went ahead and named themselves after trenbolone. Other team names — D'arce Angels, Useless Inverters, Submission Cartel — all perfectly normal. Nobody at the organization flagged 'Team Tren' as perhaps sending a message.",
+    "pitch": "The Finishers Women's Survivor Series 2 — which streamed Saturday on FloGrappling YouTube — featured eight five-woman teams including one literally called 'Team Tren.' In a sport where PED use is the open secret everyone jokes about with açaí references, a competitive team went ahead and named themselves after trenbolone. Other team names — D'arce Angels, Useless Inverters, Submission Cartel — all perfectly normal. Nobody at the organization flagged 'Team Tren' as perhaps sending a message.",
     "jokeStructure": "obvious-subtext",
     "sourceInspiration": "Finishers Women's Survivor Series 2 team names (March 22); PED culture in BJJ",
     "category": "competition-results",
@@ -166,9 +196,9 @@
   },
   {
     "headline": "Nation's Open Mats Report 300% Increase In Guard Pulls After 'Temu Ryan Hall' Goes Viral",
-    "pitch": "A UFC fighter sat down, grabbed a shin, and somehow ended up on top. The community christened it the 'Temu Ryan Hall' — a budget-tier guard pull disguised as a single leg that worked because his opponent was too confused to respond. Top comment: 'Doesn't matter; had sweep' (470 pts). By Monday, an estimated 4,000 white belts will attempt this at open mat. By Tuesday, an estimated 4,000 white belts will be underneath side control wondering what went wrong.",
+    "pitch": "A UFC fighter sat down, grabbed a shin, and somehow ended up on top. The community christened it the 'Temu Ryan Hall' — a budget-tier guard pull disguised as a single leg that worked because his opponent was too confused to respond. Top comment: 'Doesn't matter; had sweep' (470 pts). By Monday, an estimated 4,000 white belts will attempt this at open mat. By Tuesday, an estimated 4,000 white belts will be underneath side control wondering what went wrong. The clip has plateaued at ~603 upvotes — viral peak has passed but the meme lives on.",
     "jokeStructure": "logical-extreme",
-    "sourceInspiration": "Reddit r/bjj 'Temu Ryan Hall' guard sit to sweep (561 pts, 92 comments)",
+    "sourceInspiration": "Reddit r/bjj 'Temu Ryan Hall' guard sit to sweep (603 pts, 95 comments) — plateaued",
     "category": "technique",
     "scores": {
       "headline": 9,
@@ -181,9 +211,9 @@
   },
   {
     "headline": "BJJ Community Crowns 'Uncontroversial King' After Week Of Discovering Every Other King Has A Rap Sheet",
-    "pitch": "In the same week that Renzo Gracie victim-blamed a woman on Instagram (726 pts), Eddie Bravo's gym faced allegations (848 pts), and Andre Galvao unsuspended himself — the community posted a wholesome appreciation thread titled 'An uncontroversial King!!!' that immediately hit 554 upvotes. The desperation was palpable. The community needed ONE person who isn't terrible. They found him. They crowned him. The bar for 'king' in BJJ is now: has never been accused of a crime.",
+    "pitch": "In the same week that Renzo Gracie victim-blamed a woman on Instagram (725 pts), Eddie Bravo's gym faced allegations (851 pts), and Andre Galvao unsuspended himself — the community posted a wholesome appreciation thread titled 'An uncontroversial King!!!' that immediately hit 560 upvotes. The desperation was palpable. The community needed ONE person who isn't terrible. They found him. They crowned him. The bar for 'king' in BJJ is now: has never been accused of a crime.",
     "jokeStructure": "obvious-subtext",
-    "sourceInspiration": "r/bjj 'An uncontroversial King!!!' (554 pts, 65 comments) posted same week as Renzo, Galvao, 10th Planet stories",
+    "sourceInspiration": "r/bjj 'An uncontroversial King!!!' (560 pts, 65 comments) posted same week as Renzo, Galvao, 10th Planet stories",
     "category": "community",
     "scores": {
       "headline": 9,
@@ -210,6 +240,21 @@
     "generated": "2026-03-23T00:00:00Z"
   },
   {
+    "headline": "Nation Honors Chuck Norris's Kicking Legacy, Politely Ignores That He Spent 30 Years Pulling Guard",
+    "pitch": "Chuck Norris died at 86. Every obituary led with Walker, Texas Ranger, the roundhouse kick, the internet memes. Most buried the actual story: he held a 3rd-degree BJJ black belt under Rigan Machado, trained daily for over 30 years, and donated the mall space for the Machados' first American academy in 1991. Rickson Gracie called him 'a very important guy in terms of bringing jiu-jitsu to America.' The internet spent two decades making the wrong martial art famous for him. The man who 'doesn't do pushups — he pushes the earth down' was actually pulling guard and hitting arm drags into his eighties. Nobody updated the memes because 'Chuck Norris doesn't get passed — his closed guard passes you' doesn't fit on a bumper sticker.",
+    "jokeStructure": "obvious-subtext",
+    "sourceInspiration": "Chuck Norris dies at 86 — 3rd degree BJJ black belt under Rigan Machado, 30+ years daily training, donated space for first Machado academy",
+    "category": "community",
+    "scores": {
+      "headline": 8,
+      "snark": 8,
+      "timeliness": 10,
+      "originality": 8,
+      "total": 34
+    },
+    "generated": "2026-03-22T20:00:00Z"
+  },
+  {
     "headline": "Economic Analysis Finds Tapping To Leg Lock Costs Gordon Ryan More In Instructional Revenue Than Actual Knee Surgery",
     "pitch": "A detailed community analysis of the bear trap position that tore Gordon Ryan's LCL against Felipe Pena has revealed a troubling economic reality: at current BJJ Fanatics royalty rates, a single tap on camera costs approximately $47,000 in projected instructional sales, while ACL reconstruction runs about $35,000 with insurance. 'From a pure ROI standpoint, destroying your own knee is the financially responsible choice,' noted one analyst. The Miyao brothers' combined joint replacement costs were cited as exhibit A.",
     "jokeStructure": "obvious-subtext",
@@ -225,10 +270,40 @@
     "generated": "2026-03-22T20:00:00Z"
   },
   {
+    "headline": "Competitor Loses $50,000 Match After Turning His Back On Opponent To Argue He Was Winning",
+    "pitch": "Pedro Marinho was competing in the IBJJF No-Gi Absolute Grand Prix final — a $50,000 match — when he disagreed with the referee's call. His response was the most expensive tantrum in grappling history: he turned his entire back to his opponent to argue his case. Victor Hugo — demonstrating a graduate-level understanding of the concept 'attack when your opponent isn't looking' — tackled him from behind, transitioned to mount, and won 15-2. The referee reportedly declined to comment on whether Marinho's point was technically valid. He was technically correct about the disputed call. He was also technically on his back staring at the ceiling with someone on top of him. These two facts are not in tension.",
+    "jokeStructure": "systemic-absurdity",
+    "sourceInspiration": "Victor Hugo wins IBJJF No-Gi Absolute GP after Marinho turns his back to argue with ref — $50K match decided by forgetting Rule 1",
+    "category": "competition-results",
+    "scores": {
+      "headline": 9,
+      "snark": 9,
+      "timeliness": 7,
+      "originality": 9,
+      "total": 34
+    },
+    "generated": "2026-03-22T22:00:00Z"
+  },
+  {
+    "headline": "Man Who Blames Career Losses On Opponents' Steroid Use Now Coaches At Gym Founded By Sport's Most Famous Steroid User",
+    "pitch": "Nicholas Meregali — who returned to competition after 17 months and four surgeries to beat Nico Maglicic at UFC BJJ 5 — blamed his early career losses on opponents using steroids. He also called CJI 'divisive' and endorsed UFC BJJ as grappling's professional future. He now coaches at Kingsway Jiu-Jitsu, formerly New Wave, under Gordon Ryan. Gordon Ryan. The man who has discussed his own steroid use on camera, in interviews, and on social media. Meregali's anti-PED stance and his current employer exist in a state of quantum superposition, each invalidating the other whenever observed directly.",
+    "jokeStructure": "obvious-subtext",
+    "sourceInspiration": "Meregali blames steroids for early losses while training at Kingsway (Gordon Ryan's gym); calls CJI divisive while benefiting from UFC BJJ exclusivity",
+    "category": "athlete-news",
+    "scores": {
+      "headline": 9,
+      "snark": 9,
+      "timeliness": 7,
+      "originality": 9,
+      "total": 34
+    },
+    "generated": "2026-03-22T22:00:00Z"
+  },
+  {
     "headline": "Local Gym's Apex Predator Observed Sitting Out Three Rounds Before Asking Exhausted Purple Belt To 'Go Light'",
     "pitch": "The sniper. The chicken hawk. The gym's designated opportunist. He appears fresh, rested, and hydrated exactly 30 seconds after you finish your third consecutive round against a black belt. He was rolling with a first-day white belt while you were fighting for your life. 'Let's go light, bro,' he says, eyes glittering with the knowledge that you can barely stand. One 71-year-old commenter offered the most honest assessment: 'I'm always tired.' Another practitioner reported his sniper 'was rolling with some girl white belt' while he battled a black belt, then immediately asked to roll. The community has named them. They cannot be stopped. They will never roll first.",
     "jokeStructure": "universal-specific",
-    "sourceInspiration": "Reddit r/bjj 'Guys who only roll when you're tired' (186 pts, 161 comments) — sniper/chicken hawk archetype",
+    "sourceInspiration": "Reddit r/bjj 'Guys who only roll when you're tired' (192 pts, 166 comments) — sniper/chicken hawk archetype",
     "category": "gym-culture",
     "scores": {
       "headline": 9,
@@ -255,19 +330,19 @@
     "generated": "2026-03-22T06:00:00Z"
   },
   {
-    "headline": "Peer-Reviewed Study Confirms BJJ Practitioners At Every Belt Level Believe They Are The Only Fraud In The Room",
-    "pitch": "A purple belt posted 'Am I a fraud or just bad?' and 173 people showed up to confirm that yes, everyone feels like a fraud, at every belt, forever. White belts feel fraudulent for not knowing anything, blue belts for knowing just enough to realize they know nothing, purple belts because upper belts still smash them, and black belts because they peaked at brown. The study's conclusion: jiu-jitsu is the only discipline where a decade of verified improvement produces less confidence, not more. The only practitioners who DON'T experience imposter syndrome are the ones who should.",
+    "headline": "UFC BJJ Proudly Announces 7th Event, Confirms For 7th Consecutive Time That The Only Match Anyone Wants Is Not On The Card",
+    "pitch": "UFC BJJ 7 drops April 2 with three title fights, a stacked undercard, and Nicholas Meregali vs... Declan Moody. The community's most-requested superfight — Meregali vs Nicky Rodriguez, the gi GOAT vs the folkstyle disruptor, the match that would actually sell the product — remains unbooked for the seventh consecutive event. Instead, fans get Vagner Rocha in a title fight at 40 and two debut title challengers the casual audience hasn't heard of. Reddit has already called the promotion 'desperate.' The UFC has infinite resources, the two biggest names in grappling under contract, and has somehow still not figured out that people will pay to watch them fight each other.",
     "jokeStructure": "obvious-subtext",
-    "sourceInspiration": "r/bjj 'Am I a fraud or just bad?' (191 pts, 173 comments); universal imposter syndrome",
-    "category": "gym-culture",
+    "sourceInspiration": "UFC BJJ 7 card announcement — Meregali vs Moody instead of Meregali vs Nicky Rod; community frustration (170+ pts)",
+    "category": "competition-results",
     "scores": {
       "headline": 8,
-      "snark": 8,
+      "snark": 9,
       "timeliness": 9,
       "originality": 8,
-      "total": 33
+      "total": 34
     },
-    "generated": "2026-03-23T07:00:00Z"
+    "generated": "2026-03-23T06:00:00Z"
   },
   {
     "headline": "18-Year-Old Purple Belt Wins 7 Matches At ADCC Trials, Makes Every 35-Year-Old Purple Belt Question Entire Existence",
@@ -281,81 +356,6 @@
       "timeliness": 8,
       "originality": 8,
       "total": 33
-    },
-    "generated": "2026-03-22T20:00:00Z"
-  },
-  {
-    "headline": "Report Confirms Chuck Norris Donated First BJJ Academy Space In America, Was Thanked With 20 Years Of Roundhouse Kick Jokes",
-    "pitch": "Following Chuck Norris's death at 86, Rigan Machado revealed that Norris donated the mall space for the first Machado BJJ academy in America in 1991, trained daily for 30+ years, and convinced Machado not to return to Brazil. He held a 3rd-degree black belt. The internet, which owes approximately 40% of its early meme culture to this man, spent those same 30 years making roundhouse kick jokes while he was quietly helping build the sport from the ground up. Somewhere, a BJJ Instagram account with 200 followers has more 'martial artist' in its bio than Chuck Norris ever put in his.",
-    "jokeStructure": "obvious-subtext",
-    "sourceInspiration": "Chuck Norris dies at 86 — Rigan Machado reveals his foundational role in American BJJ",
-    "category": "community",
-    "scores": {
-      "headline": 8,
-      "snark": 7,
-      "timeliness": 9,
-      "originality": 8,
-      "total": 32
-    },
-    "generated": "2026-03-22T20:00:00Z"
-  },
-  {
-    "headline": "BJJ Black Belt Enters Judo Tournament, Wins Every Match With Clean Throws, Gets Penalized For Using Jiu-Jitsu",
-    "pitch": "Pro BJJ black belt Beatrice Jin competed in a local judo tournament, winning matches with sumi gaeshi, seoi nage, and drop tai otoshi — all legitimate judo throws. She then transitioned into a bow-and-arrow choke from turtle, at which point the judo gods intervened via shido penalty. Jin has reportedly been banned from competing in judo, wrestling, sambo, and sumo until she agrees to stop being competent on the ground.",
-    "jokeStructure": "systemic-absurdity",
-    "sourceInspiration": "Beatrice Jin competes in judo, wins, gets penalized for bow-and-arrow choke from turtle",
-    "category": "community",
-    "scores": {
-      "headline": 8,
-      "snark": 8,
-      "timeliness": 8,
-      "originality": 8,
-      "total": 32
-    },
-    "generated": "2026-03-22T20:00:00Z"
-  },
-  {
-    "headline": "Man Spends 12 Years Chasing Black Belt, Achieves Lifelong Dream, Immediately Takes Up Pickleball",
-    "pitch": "A newly promoted black belt has announced he is 'exploring other interests' approximately six weeks after the promotion he spent over a decade pursuing. 'I have nothing left to prove,' he told training partners who are now wondering why they clapped during his belt ceremony. He has reportedly joined a pickleball league, a pottery class, and a hiking group — none of which require cauliflower ear, joint tape, or explaining why you have a black eye on Monday. His gym membership autopay, however, remains active. It always does.",
-    "jokeStructure": "universal-specific",
-    "sourceInspiration": "Reddit r/bjj 'Black Belt Falling Out of Love' thread (240 pts, 180 comments) — pickleball mentioned by 50+ year old hobbyists",
-    "category": "community",
-    "scores": {
-      "headline": 9,
-      "snark": 8,
-      "timeliness": 7,
-      "originality": 8,
-      "total": 32
-    },
-    "generated": "2026-03-22T20:00:00Z"
-  },
-  {
-    "headline": "Area Gym Owner Publishes 3,000-Word Lineage History On Website, Schedule Remains Classified Information",
-    "pitch": "A local BJJ academy has launched a comprehensive new website featuring: a detailed account of every instructor's lineage going back to Mitsuyo Maeda, 47 photos of students holding medals, and a contact form that requires your email, phone number, and blood type before revealing class times. The schedule was last updated in 2024. One gym owner offered the most honest take: 'My schedule, address, pricing — it's all on the website. The top three questions I get are what's the schedule, how much does it cost, and where are you located. I don't think it matters because you fuckers don't read anyways.'",
-    "jokeStructure": "universal-specific",
-    "sourceInspiration": "Reddit r/bjj 'Dear academy owners' thread (365 pts, 95 comments) — schedule and pricing complaints",
-    "category": "gym-culture",
-    "scores": {
-      "headline": 9,
-      "snark": 8,
-      "timeliness": 7,
-      "originality": 8,
-      "total": 32
-    },
-    "generated": "2026-03-22T20:00:00Z"
-  },
-  {
-    "headline": "Man Who Has Watched 400 BJJ Instructional Videos Reports Breakthrough: Can Now Execute 3 Techniques Under Pressure",
-    "pitch": "A dedicated hobbyist who has consumed approximately 2,300 hours of BJJ Fanatics content — spanning 47 instructionals from 23 different black belts covering every guard system invented since 1993 — has reported a significant training milestone: he can now reliably execute a scissor sweep, a cross-collar choke, and an Americana from mount when rolling with someone his own size who isn't trying very hard. 'The key was Gordon Ryan's systematization of—' he began, before being swept by a three-stripe white belt who has watched zero instructionals.",
-    "jokeStructure": "logical-extreme",
-    "sourceInspiration": "Evergreen: the YouTube technique collector who knows 400 moves and can execute 3",
-    "category": "gym-culture",
-    "scores": {
-      "headline": 9,
-      "snark": 8,
-      "timeliness": 5,
-      "originality": 8,
-      "total": 30
     },
     "generated": "2026-03-22T20:00:00Z"
   }
