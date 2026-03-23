@@ -1005,6 +1005,33 @@ function savePitchState(data: Array<{ index: number; headline: string; slug: str
 let lastPitchData = loadPitchState();
 
 /**
+ * Remove pitches from satire-pitches.json by slug.
+ * Called immediately when pitches are selected or flagged bad — don't wait for the engine.
+ */
+function removePitchesFromFile(slugsToRemove: string[]) {
+  const pitchesPath = resolve(__dirname, "satire-pitches.json");
+  if (!existsSync(pitchesPath)) return;
+
+  try {
+    const slugSet = new Set(slugsToRemove);
+    const pitches = JSON.parse(readFileSync(pitchesPath, "utf-8"));
+    const before = pitches.length;
+    const cleaned = pitches.filter((p: any) => {
+      const slug = (p.headline || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 60);
+      return !slugSet.has(slug);
+    });
+    writeFileSync(pitchesPath, JSON.stringify(cleaned, null, 2));
+    console.log(`[satire] Removed ${before - cleaned.length} pitches from file (${cleaned.length} remaining)`);
+  } catch (e: any) {
+    console.log(`[satire] Failed to clean pitches file: ${e.message}`);
+  }
+}
+
+/**
  * Post satire pitches to the #satire-pitches channel.
  * Called by the satire engine via the /pitches slash command or cron.
  */
@@ -1128,11 +1155,19 @@ async function handleSatireReply(message: import("discord.js").Message) {
     feedback.push(...newFeedback);
     writeFileSync(FEEDBACK_FILE, JSON.stringify(feedback, null, 2));
 
-    // Push feedback to repo
+    // Immediately remove bad pitches from satire-pitches.json
+    removePitchesFromFile(matched.map((s) => s.slug));
+
+    // Remove from in-memory pitch data so they don't reappear in this session
+    const badSlugs = new Set(matched.map((s) => s.slug));
+    lastPitchData = lastPitchData.filter((p) => !badSlugs.has(p.slug));
+    savePitchState(lastPitchData);
+
+    // Push feedback + cleaned pitches to repo
     try {
       const { execSync } = await import("child_process");
       const repoRoot = resolve(__dirname, "..");
-      execSync(`cd "${repoRoot}" && git add .satire-feedback.json && git commit -m "data: bad pitch feedback from ${message.author.username}" && git push`, { stdio: "pipe" });
+      execSync(`cd "${repoRoot}" && git add .satire-feedback.json bot/satire-pitches.json && git commit -m "data: ${matched.length} bad pitches removed by ${message.author.username}" && git push`, { stdio: "pipe" });
     } catch (e: any) {
       console.log(`[satire] Feedback push failed: ${e.message?.slice(0, 100)}`);
     }
@@ -1142,13 +1177,13 @@ async function handleSatireReply(message: import("discord.js").Message) {
       embeds: [
         new EmbedBuilder()
           .setColor(0xff4444)
-          .setTitle(`✗ ${matched.length} pitch${matched.length > 1 ? "es" : ""} flagged as bad`)
+          .setTitle(`✗ ${matched.length} pitch${matched.length > 1 ? "es" : ""} killed`)
           .setDescription(headlines)
-          .setFooter({ text: "The satire engine will learn from this" }),
+          .setFooter({ text: "Removed from pitches. The satire engine will learn from this." }),
       ],
     });
 
-    console.log(`[satire] ${matched.length} pitches flagged as bad by ${message.author.username}`);
+    console.log(`[satire] ${matched.length} pitches killed by ${message.author.username}`);
     return;
   }
 
@@ -1171,12 +1206,20 @@ async function handleSatireReply(message: import("discord.js").Message) {
   const merged = [...existing, ...newSelections];
   writeFileSync(SATIRE_SELECTIONS_FILE, JSON.stringify(merged, null, 2));
 
-  // Push selections back to repo
+  // Immediately remove selected pitches from satire-pitches.json
+  removePitchesFromFile(matched.map((s) => s.slug));
+
+  // Remove from in-memory pitch data so they don't reappear in this session
+  const selectedSlugs = new Set(matched.map((s) => s.slug));
+  lastPitchData = lastPitchData.filter((p) => !selectedSlugs.has(p.slug));
+  savePitchState(lastPitchData);
+
+  // Push selections + cleaned pitches to repo
   try {
     const { execSync } = await import("child_process");
     const repoRoot = resolve(__dirname, "..");
-    execSync(`cd "${repoRoot}" && git add .satire-selections.json && git commit -m "data: satire selections by ${message.author.username}" && git push`, { stdio: "pipe" });
-    console.log("[satire] Selections pushed to GitHub");
+    execSync(`cd "${repoRoot}" && git add .satire-selections.json bot/satire-pitches.json && git commit -m "data: ${matched.length} pitches selected by ${message.author.username}" && git push`, { stdio: "pipe" });
+    console.log("[satire] Selections + cleaned pitches pushed to GitHub");
   } catch (e: any) {
     console.log(`[satire] Git push failed (may be no changes): ${e.message?.slice(0, 100)}`);
   }
@@ -1189,11 +1232,11 @@ async function handleSatireReply(message: import("discord.js").Message) {
         .setColor(0x00cc88)
         .setTitle(`✓ ${matched.length} pitch${matched.length > 1 ? "es" : ""} queued for ThePorra`)
         .setDescription(headlines)
-        .setFooter({ text: "These will be written and published on the next pipeline run" }),
+        .setFooter({ text: "Queued for publishing. Removed from pitches." }),
     ],
   });
 
-  console.log(`[satire] ${selections.length} pitches selected by ${message.author.username}`);
+  console.log(`[satire] ${matched.length} pitches selected by ${message.author.username}`);
 }
 
 /**
