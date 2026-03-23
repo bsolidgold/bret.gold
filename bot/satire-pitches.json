@@ -15,6 +15,21 @@
     "generated": "2026-03-22T06:00:00Z"
   },
   {
+    "headline": "Man Contractually Banned From ADCC Dismisses ADCC Because 'Krakow Is Not Even Poland's Capital City'",
+    "pitch": "Nicholas Meregali, now exclusively signed to UFC BJJ, dismissed ADCC 2026 in Krakow as 'a hassle' and 'not even a capital city.' He is contractually banned from competing at ADCC. The man who cannot attend the party is loudly telling everyone the venue sucks. In the same interview, he blamed early career losses on steroids, endorsed UFC BJJ as grappling's future, and called CJI 'divisive' — while coaching at Gordon Ryan's gym and benefiting from UFC BJJ's own exclusive contracts. The community's response was immediate: he can't go, so now it's beneath him. ADCC 2024 in Las Vegas sold out a 17,000-seat arena. Krakow's TAURON Arena holds 22,000. It is, by every measure, the biggest grappling event on earth. But it's not in a capital city, so it doesn't count.",
+    "jokeStructure": "obvious-subtext",
+    "sourceInspiration": "Meregali podcast interview — dismisses ADCC Krakow as 'not even a capital city' while UFC BJJ exclusive contract bars him from competing",
+    "category": "athlete-news",
+    "scores": {
+      "headline": 9,
+      "snark": 10,
+      "timeliness": 10,
+      "originality": 9,
+      "total": 38
+    },
+    "generated": "2026-03-23T16:00:00Z"
+  },
+  {
     "headline": "Sport's Most Inappropriate Person Now Serves As Its Most Trusted Whistleblower",
     "pitch": "Craig Jones — the man who built his brand on crude humor, shirtless promos, and running a grappling event like a circus — posted a video warning about a coach threatening to revoke a foreign athlete's visa after she filed a police report about sexual assault. The community's reaction: unanimous support. Nobody batted an eye. In 2026, the guy who oil-checks people on camera is the moral compass of Brazilian Jiu-Jitsu. The sport has officially run out of responsible adults and is now relying on Craig Jones. Let that sink in.",
     "jokeStructure": "obvious-subtext",
@@ -120,6 +135,36 @@
     "generated": "2026-03-22T22:00:00Z"
   },
   {
+    "headline": "Local Gym's Purple Belts Now Classified As Essential Workers Due To Unprecedented Alpha Male Intake",
+    "pitch": "A national survey of BJJ gym owners confirms what your bored, hungry purple belts already knew: the influx of overconfident young men who 'just want to see what they're made of' has reached critical mass. The standard pipeline — arrive jacked, demand to roll immediately, go 100% against someone's grandmother, lose to a 155-pound software engineer, ragequit, post on Instagram that BJJ is 'bullshit' — now runs on a 2-week cycle per specimen. One gym near a naval special warfare base reports processing up to twelve alpha males per month. The designated enforcer — a 5'3\" competition-class blue belt woman — has been promoted to full-time. One purple belt described the experience as 'crushing them and watching the soul drain from their eyes.' The community calls it 'The Tate Effect.' 'Whatever, I didn't want to come to your sweaty pajama orgy anyway,' read the most recent Yelp review. One reformed alpha confirmed the pipeline's endpoint: 'I don't really think I'm so tough anymore.'",
+    "jokeStructure": "universal-specific",
+    "sourceInspiration": "Reddit r/bjj 'Alpha maleness?' (463 pts, 350 comments) — gym enforcer pipeline, 'feed them to your bored hungry purples' (416 pts), naval base (654 pts), 'The Tate Effect' (40 pts), 'soul drain from their eyes' (161 pts), 'keep jiu jitsu gay rashguard' (234 pts)",
+    "category": "gym-culture",
+    "scores": {
+      "headline": 9,
+      "snark": 9,
+      "timeliness": 10,
+      "originality": 8,
+      "total": 36
+    },
+    "generated": "2026-03-23T14:00:00Z"
+  },
+  {
+    "headline": "UFC BJJ Awards Title Shot To Fighter Hospitalized Two Months Ago, Confirms Nobody Is In Charge Of Checking That Sort Of Thing",
+    "pitch": "UFC BJJ 7's welterweight title fight on April 2 features Andrew Tackett vs. Vagner Rocha — a 43-year-old who was hospitalized in January with heart failure and atrial fibrillation, openly uses TRT, and received a direct title shot without winning a contender bout. The promotion that banned ADCC athletes for 'competitive integrity' has no athletic commission oversight, no medical clearance process, and apparently no one whose job it is to Google 'should a man whose heart recently failed compete for a championship.' BJJDoc's investigative piece raised every red flag available. UFC BJJ's response: booking him anyway. Rocha himself is game. The system around him does not appear to exist.",
+    "jokeStructure": "systemic-absurdity",
+    "sourceInspiration": "BJJDoc investigation — Vagner Rocha heart failure + TRT + direct title shot at UFC BJJ 7 (April 2); no athletic commission oversight",
+    "category": "competition-results",
+    "scores": {
+      "headline": 9,
+      "snark": 9,
+      "timeliness": 9,
+      "originality": 9,
+      "total": 36
+    },
+    "generated": "2026-03-23T16:00:00Z"
+  },
+  {
     "headline": "Alliance Jiu-Jitsu Holds Meeting About Gym Safety; Community Reacts As If They Invented Indoor Plumbing",
     "pitch": "In the same week that Andre Galvao unsuspended himself from his own company, Renzo Gracie victim-blamed a woman online, and a BJJ coach allegedly threatened to revoke an athlete's visa for reporting sexual assault — Alliance held a meeting. A meeting. About athlete safety. The community erupted in praise. 'Finally someone is doing something,' which tells you everything you need to know about the baseline expectation in this sport. The bar for 'doing the right thing' in Brazilian Jiu-Jitsu is now: held a meeting about the right thing. Alliance did not cure cancer. They did not solve world hunger. They talked about a thing that every organization in every industry has been talking about for decades. Standing ovation.",
     "jokeStructure": "systemic-absurdity",
@@ -133,21 +178,6 @@
       "total": 35
     },
     "generated": "2026-03-23T06:00:00Z"
-  },
-  {
-    "headline": "Local Gym's Purple Belts Now Classified As Essential Workers Due To Unprecedented Alpha Male Intake",
-    "pitch": "A national survey of BJJ gym owners confirms what your bored, hungry purple belts already knew: the influx of overconfident young men who 'just want to see what they're made of' has reached critical mass. The standard pipeline — arrive jacked, demand to roll immediately, go 100% against someone's grandmother, lose to a 155-pound software engineer, ragequit, post on Instagram that BJJ is 'bullshit' — now runs on a 2-week cycle per specimen. One gym near a naval special warfare base reports processing up to twelve alpha males per month (330 pts). The designated enforcer — a 5'3\" competition-class blue belt woman — has been promoted to full-time. 'Whatever, I didn't want to come to your sweaty pajama orgy anyway,' read the most recent Yelp review. One reformed alpha confirmed the pipeline's endpoint: 'I don't really think I'm so tough anymore.'",
-    "jokeStructure": "universal-specific",
-    "sourceInspiration": "Reddit r/bjj 'Alpha maleness?' (210 pts, 194 comments) — gym enforcer pipeline, 'feed them to your bored hungry purples' (206 pts), naval base (330 pts), 'sweaty pajama orgy' (31 pts)",
-    "category": "gym-culture",
-    "scores": {
-      "headline": 9,
-      "snark": 9,
-      "timeliness": 9,
-      "originality": 8,
-      "total": 35
-    },
-    "generated": "2026-03-22T22:00:00Z"
   },
   {
     "headline": "Power Slap Secures National TV Deal Before BJJ, Confirming That Getting Slapped In The Face Is More Marketable Than 20 Minutes Of Wrist Fighting",
@@ -189,21 +219,6 @@
       "headline": 9,
       "snark": 9,
       "timeliness": 9,
-      "originality": 8,
-      "total": 35
-    },
-    "generated": "2026-03-22T18:00:00Z"
-  },
-  {
-    "headline": "Nation's Open Mats Report 300% Increase In Guard Pulls After 'Temu Ryan Hall' Goes Viral",
-    "pitch": "A UFC fighter sat down, grabbed a shin, and somehow ended up on top. The community christened it the 'Temu Ryan Hall' — a budget-tier guard pull disguised as a single leg that worked because his opponent was too confused to respond. Top comment: 'Doesn't matter; had sweep' (470 pts). By Monday, an estimated 4,000 white belts will attempt this at open mat. By Tuesday, an estimated 4,000 white belts will be underneath side control wondering what went wrong. The clip has plateaued at ~603 upvotes — viral peak has passed but the meme lives on.",
-    "jokeStructure": "logical-extreme",
-    "sourceInspiration": "Reddit r/bjj 'Temu Ryan Hall' guard sit to sweep (603 pts, 95 comments) — plateaued",
-    "category": "technique",
-    "scores": {
-      "headline": 9,
-      "snark": 8,
-      "timeliness": 10,
       "originality": 8,
       "total": 35
     },
@@ -345,18 +360,18 @@
     "generated": "2026-03-23T06:00:00Z"
   },
   {
-    "headline": "18-Year-Old Purple Belt Wins 7 Matches At ADCC Trials, Makes Every 35-Year-Old Purple Belt Question Entire Existence",
-    "pitch": "David Santos, an 18-year-old purple belt from Brazil, defeated seven experienced black belts in a single day to win the 66kg bracket at the ADCC South American Trials. His run included three submissions and zero breaks for açaí. Meanwhile, a 35-year-old purple belt in suburban New Jersey who has been training for six years and recently celebrated finally hitting a clean scissor sweep in live rolling has asked that we 'not compare apples to oranges.' The apples are competing at ADCC. The oranges skipped class last Thursday because it was raining.",
+    "headline": "Sport's Greatest-Ever Competitor Retires At 30 With Mysterious Health Crisis; 22-Year-Old Identifies Mystery In Under 4 Words",
+    "pitch": "Tye Ruotolo, reigning ADCC champion, said what the community has been joking about for years: Gordon Ryan's career-ending health collapse was caused by steroids. 'Steroids are not good for longevity — that's just a proven fact.' He's frustrated he'll never compete against the GOAT, which translates to: the most talented 22-year-old in grappling wanted to test himself against the greatest ever, but the greatest ever's supplements retired first. Ryan attributes his gut microbiome disorder to stress. The community does not share this attribution. Ruotolo was offered PEDs as a minor and declined. One of them is still competing. The other is consulting gastroenterologists.",
     "jokeStructure": "obvious-subtext",
-    "sourceInspiration": "Teen prodigies dominate ADCC SA Trials — 18yo purple belt wins 7 matches in one day",
-    "category": "competition-results",
+    "sourceInspiration": "Tye Ruotolo publicly calls out Gordon Ryan's PED use as cause of health collapse; mourns lost rivalry — BJJDoc, BJJEE, Yahoo Sports",
+    "category": "athlete-news",
     "scores": {
       "headline": 9,
-      "snark": 8,
+      "snark": 9,
       "timeliness": 8,
-      "originality": 8,
-      "total": 33
+      "originality": 9,
+      "total": 35
     },
-    "generated": "2026-03-22T20:00:00Z"
+    "generated": "2026-03-23T16:30:00Z"
   }
 ]
